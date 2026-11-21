@@ -1,4 +1,4 @@
-import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,safeText} from './core.mjs';
+import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary} from './core.mjs';
 
 const content=document.querySelector('#content');
 const dialog=document.querySelector('#goal-dialog');
@@ -6,7 +6,7 @@ const form=document.querySelector('#goal-form');
 const inputSteps=document.querySelector('#step-inputs');
 const fileInput=document.querySelector('#import-file');
 const toastBox=document.querySelector('#toast');
-let currentTab='today', editingId=null, lastDay=localDay(), toastTimer;
+let currentTab='today', editingId=null, lastDay=localDay(), toastTimer, celebratedId=null;
 let state=loadState();
 
 function loadState(){
@@ -38,18 +38,87 @@ const activeGoals=()=>state.goals.filter(g=>progress(g)<100);
 const totalDays=()=>allDays(myGoals()).length;
 
 function head(text,subtitle='') {return `<div class="section-head"><div><h2>${h(text)}</h2>${subtitle?`<p class="section-caption">${h(subtitle)}</p>`:''}</div></div>`;}
-function hero(){return `<section class="hero"><div><p class="eyebrow">ОДИН ШАГ КАЖДЫЙ ДЕНЬ</p><h1>Большая цель.<br>Маленький шаг.</h1><p class="lead">Не нужно менять всю жизнь за один день. Выберите то, что важно, и начните с действия, на которое хватит пяти минут.</p><button class="button button-dark" data-action="new">Создать свою цель <span aria-hidden="true">↗</span></button></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-circle">✓</div><div class="hero-spark">✳</div><div class="hero-small">Сегодня лучше, чем вчера</div></div></section>`;}
+function hero(){
+  return `<section class="hero onboarding-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">БОЛЬШАЯ ЦЕЛЬ НАЧИНАЕТСЯ С МАЛОГО</p>
+      <h1>Один шаг.<br>Каждый день.</h1>
+      <p class="lead">Выберите то, что важно. Превратим цель в действие на несколько минут — без гонки и чувства вины.</p>
+      <button class="button button-dark" data-action="new">Создать свою цель <span aria-hidden="true">↗</span></button>
+      <div class="starter-choices">
+        <span>Или начните с готового плана:</span>
+        <div class="starter-buttons">
+          <button type="button" class="chip" data-preset="python">Изучать Python</button>
+          <button type="button" class="chip" data-preset="language">Учить язык</button>
+          <button type="button" class="chip" data-preset="sport">Двигаться больше</button>
+        </div>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="hero-orbit"></div><div class="hero-circle">✓</div>
+      <div class="hero-spark">✳</div><div class="hero-small">Начните с пяти минут</div>
+    </div>
+  </section>`;
+}
+function todayIntro(summary){
+  const complete=summary.total>0 && summary.done===summary.total;
+  return `<section class="today-intro">
+    <div><p class="eyebrow">ВАШ ДЕНЬ · ${h(today().split('-').reverse().join('.'))}</p>
+      <h1>${complete?'На сегодня — сделано!':'Сегодня достаточно одного шага.'}</h1>
+      <p class="lead">${complete?'Все привычки отмечены. Прогресс сохраняется — возвращайтесь завтра.':'Выберите действие, выполните его и возвращайтесь к своему дню.'}</p>
+    </div>
+    <div class="today-counter" role="status" aria-label="Выполнено ${summary.done} из ${summary.total} привычек">
+      <strong>${summary.done}<span> / ${summary.total}</span></strong><small>привычек сегодня</small>
+    </div>
+  </section>`;
+}
+function startGuide(){
+  return `<div class="start-guide" aria-label="Три шага для старта">
+    <div><b>01</b><span>Выберите цель</span></div>
+    <div><b>02</b><span>Найдите маленькое действие</span></div>
+    <div><b>03</b><span>Повторите завтра</span></div>
+  </div>`;
+}
 function empty(title,body){return `<div class="empty"><div class="empty-icon" aria-hidden="true">↗</div><h2>${h(title)}</h2><p>${h(body)}</p><button class="button button-primary" data-action="new">+ Создать первую цель</button></div>`;}
 function smallProgress(goal){return `<div class="progress-top"><span>${completedSteps(goal)} из ${goal.steps.length} шагов</span><span>${progress(goal)}%</span></div><div class="progress-bar" role="progressbar" aria-label="Прогресс цели ${h(goal.title)}" aria-valuenow="${progress(goal)}" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" style="width:${progress(goal)}%"></div></div>`;}
-function todayCard(g){
+function todayCard(g,featured=false){
   const day=today(),done=doneToday(g,day),next=nextStep(g),finished=progress(g)===100;
-  const button=done?`<span class="done-pill">✓ Сегодня сделано</span><button class="button button-ghost small" data-action="undo" data-id="${escapeId(g.id)}">Отменить</button>`:`<button class="button button-primary" data-action="mark" data-id="${escapeId(g.id)}">✓ Сделал шаг</button>`;
-  return `<article class="card"><div class="goal-heading"><div><p class="habit-label">МОЯ ПРИВЫЧКА</p><h3 class="card-title">${h(g.title)}</h3></div>${finished?'<span class="badge">Цель достигнута</span>':''}</div><p class="ritual">После <strong>${h(g.habit.trigger)}</strong> я <strong>${h(g.habit.action)}</strong>.</p>${smallProgress(g)}<div class="next-step"><small>${finished?'ЦЕЛЬ ВЫПОЛНЕНА':done?'СЛЕДУЮЩИЙ ШАГ':'ШАГ НА СЕГОДНЯ'}</small>${h(finished?'Продолжайте привычку в своём ритме — она остаётся с вами.':next?.title??'Все шаги пройдены')}</div><div class="card-actions">${button}</div><div class="mini-meta">${g.habit.minutes} мин/день · серия ${streak(g.log,day)} дн. · выполнено дней ${g.log.length}</div></article>`;
+  const label=finished?'ПРИВЫЧКА НА СЕГОДНЯ':done?'СЛЕДУЮЩИЙ ШАГ — ЗАВТРА':'ШАГ НА СЕГОДНЯ';
+  const stepTitle=finished
+    ? 'Повторите выбранное маленькое действие — цель уже достигнута.'
+    : (next?.title??'Все шаги пройдены');
+  const button=done
+    ? `<span class="done-pill">✓ Сегодня сделано</span>
+       <button class="button button-ghost small" data-action="undo" data-id="${escapeId(g.id)}">Отменить</button>
+       <button class="button button-outline small" data-tab="goals">В работе ↗</button>`
+    : `<button class="button button-primary" data-action="mark" data-id="${escapeId(g.id)}">✓ Сделал шаг</button>`;
+  const celebration=done && celebratedId===g.id
+    ? `<div class="success-inline" role="status"><strong>Шаг засчитан!</strong><span>Прогресс сохранён. Вы вернётесь к следующему шагу завтра.</span></div>`:'';
+  return `<article class="card daily-card ${featured?'daily-card-featured':''} ${done?'daily-card-done':''}">
+    <div class="goal-heading"><div><p class="habit-label">${featured?'ГЛАВНЫЙ ШАГ СЕГОДНЯ':'МОЯ ПРИВЫЧКА'}</p>
+      <h3 class="card-title">${h(g.title)}</h3></div>
+      ${finished?'<span class="badge">Цель достигнута</span>':''}</div>
+    <p class="ritual">После <strong>${h(g.habit.trigger)}</strong> я <strong>${h(g.habit.action)}</strong>.</p>
+    ${smallProgress(g)}
+    <div class="next-step"><small>${label}</small><strong>${h(stepTitle)}</strong></div>
+    ${!done?'<p class="tiny-hint">Трудно начать? Попробуйте хотя бы одну минуту — и решите, продолжать ли.</p>':''}
+    ${celebration}
+    <div class="card-actions">${button}</div>
+    <div class="mini-meta">${g.habit.minutes} мин/день · серия ${streak(g.log,day)} дн. · выполнено дней ${g.log.length}</div>
+  </article>`;
 }
 function todayPage(){
-  const goals=myGoals(), done=completedToday();
-  const sorted=[...goals].sort((a,b)=>Number(doneToday(a,today()))-Number(doneToday(b,today())));
-  return `${hero()}${head('Ваши шаги сегодня',goals.length?`${done} из ${goals.length} привычек отмечено`:'Для старта достаточно одной цели.')}${goals.length?`<div class="grid">${sorted.map(todayCard).join('')}</div>`:empty('Что хотите изменить?','Добавьте цель, и мы превратим её в последовательность небольших действий.')} ${goals.length && done===goals.length?`<div class="card" style="margin-top:20px;background:#eaf7e0"><h3>На сегодня — отлично!</h3><p class="muted" style="margin:0">Все привычки отмечены. Возвращайтесь завтра за следующим маленьким шагом.</p></div>`:''}`;
+  const goals=myGoals();
+  if(!goals.length)return `${hero()}${startGuide()}`;
+  const summary=dailySummary(goals,today());
+  const featured=goals.find(g=>g.id===summary.nextGoalId)??goals[0];
+  const others=goals.filter(g=>g.id!==featured.id);
+  const allDone=summary.done===summary.total;
+  return `${todayIntro(summary)}
+    ${allDone?`<div class="all-done"><strong>Все привычки отмечены.</strong><span>Сегодня достаточно. Отдохните — завтра будет новый день.</span><button class="button button-outline small" data-tab="progress">Посмотреть прогресс ↗</button></div>`:''}
+    ${head(allDone?'Сегодня вы справились':'Начните с этого',`${summary.done} из ${summary.total} привычек выполнено`)}
+    ${todayCard(featured,true)}
+    ${others.length?`${head('Остальные привычки','Можно вернуться к ним в течение дня.')}<div class="grid">${others.map(g=>todayCard(g)).join('')}</div>`:''}`;
 }
 function goalCard(g){
   const finished=progress(g)===100;
@@ -73,7 +142,7 @@ function openGoal(id=null){
   document.querySelector('#dialog-title').textContent=g?'Редактировать цель':'Новая большая цель';
   document.querySelector('#form-error').hidden=true;
   if(g){form.elements.title.value=g.title;form.elements.reason.value=g.reason;form.elements.trigger.value=g.habit.trigger;form.elements.action.value=g.habit.action;form.elements.minutes.value=g.habit.minutes;g.steps.forEach(addStepRow);}
-  else{addStepRow();addStepRow();addStepRow();}
+  else{addStepRow();}
   dialog.showModal();form.elements.title.focus();
 }
 function fillPreset(key){const p=PRESETS[key];if(!p)return;for(const field of ['title','reason','trigger','action','minutes'])form.elements[field].value=p[field];inputSteps.replaceChildren();p.steps.forEach(title=>addStepRow({title}));form.elements.title.focus();}
@@ -87,7 +156,7 @@ function submitGoal(ev){
     const created=createGoal(data);
     const old=editingId?goalById(editingId):null;
     const goal=old?{...created,id:old.id,createdAt:old.createdAt,log:old.log,steps:rows.map(row=>({id:row.dataset.stepId,title:row.querySelector('input').value.trim(),completedOn:row.dataset.completedOn||null}))}:created;
-    if(change(s=>({...s,goals:old?s.goals.map(g=>g.id===old.id?goal:g):[...s.goals,goal]}))){dialog.close();currentTab='goals';render();toast(old?'Цель обновлена':'Цель создана. Первый шаг уже ждёт вас!');}
+    if(change(s=>({...s,goals:old?s.goals.map(g=>g.id===old.id?goal:g):[...s.goals,goal]}))){dialog.close();currentTab=old?'goals':'today';celebratedId=null;render();toast(old?'Цель обновлена':'Цель создана. Первый маленький шаг — на экране «Сегодня».');}
   }catch(err){const msg=document.querySelector('#form-error');msg.textContent=err.message||'Не удалось сохранить цель';msg.hidden=false;msg.scrollIntoView({block:'nearest'});}
 }
 function editAction(action,id,stepId){const g=goalById(id);if(!g)return;
@@ -99,7 +168,7 @@ function editAction(action,id,stepId){const g=goalById(id);if(!g)return;
   if(action==='mark'||action==='undo'){
     const result=(action==='mark'?markDay:undoDay)(g,today());
     if(!result.changed){toast('Сегодня уже отмечено');return;}
-    if(change(s=>({...s,goals:s.goals.map(v=>v.id===id?result.goal:v)})))toast(action==='mark'?(progress(result.goal)===100?'Цель достигнута! Привычка продолжается.':'Шаг засчитан! Завтра вас ждёт следующий.'):'Отметка за сегодня отменена');
+    if(change(s=>({...s,goals:s.goals.map(v=>v.id===id?result.goal:v)}))){celebratedId=action==='mark'?id:null;render();toast(action==='mark'?(progress(result.goal)===100?'Цель достигнута! Привычка продолжается.':'Шаг засчитан! Завтра вас ждёт следующий.'):'Отметка за сегодня отменена');}
   }
 }
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`privychka-backup-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Резервная копия сохранена');}
@@ -112,7 +181,7 @@ async function importData(file){if(!file)return;
 document.addEventListener('click',ev=>{
   const btn=ev.target.closest('button[data-tab],button[data-action],button[data-preset]');if(!btn)return;
   if(btn.dataset.tab){currentTab=btn.dataset.tab;render();content.focus({preventScroll:true});return;}
-  if(btn.dataset.preset){fillPreset(btn.dataset.preset);return;}
+  if(btn.dataset.preset){if(!dialog.open)openGoal();fillPreset(btn.dataset.preset);return;}
   const a=btn.dataset.action,id=btn.dataset.id;
   if(a==='new')openGoal();else if(a==='close')dialog.close();else if(a==='add-step')addStepRow();else if(a==='remove-step'){if(inputSteps.children.length===1){toast('Нужен хотя бы один шаг');return;}btn.closest('.step-entry')?.remove();}
   else if(a==='export')exportData();else if(a==='import')fileInput.click();else if(id)editAction(a,id,btn.dataset.stepId);

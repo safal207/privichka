@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGoal, localDay, shiftDay, streak, bestStreak, markDay, undoDay, nextStep, progress, normalizeState, starterState, milestones, toggleStep } from '../src/core.mjs';
+import { createGoal, localDay, shiftDay, streak, bestStreak, markDay, undoDay, nextStep, progress, normalizeState, starterState, milestones, toggleStep, dailySummary } from '../src/core.mjs';
 const sample=()=>createGoal({title:'Освоить Python',action:'учу 5 минут',trigger:'кофе',minutes:5,steps:['Шаг 1','Шаг 2','Шаг 3']},new Date(2026,10,21));
 test('создание цели и первый шаг',()=>{const g=sample();assert.equal(g.steps.length,3);assert.equal(progress(g),0);assert.equal(nextStep(g).title,'Шаг 1');});
 test('один день — одна отметка',()=>{const a=markDay(sample(),'2026-11-21');assert.equal(a.changed,true);assert.equal(progress(a.goal),33);assert.equal(markDay(a.goal,'2026-11-21').changed,false);});
@@ -14,3 +14,20 @@ test('JSON roundtrip',()=>{const state={version:1,goals:[sample()]};assert.deepE
 test('отклонение повреждённого импорта',()=>{assert.throws(()=>normalizeState({goals:[]}));assert.throws(()=>normalizeState({version:1,goals:[{...sample(),log:['2026-02-30']}]}));assert.throws(()=>normalizeState({version:2,goals:[]}));});
 test('обязательные поля',()=>{assert.throws(()=>createGoal({title:'A',trigger:'B',action:'',steps:['X']}));assert.throws(()=>createGoal({title:'A',trigger:'B',action:'C',steps:[]}));});
 test('достижения и пустое состояние',()=>{assert.deepEqual(milestones(7),[3,7]);assert.deepEqual(starterState(),{version:1,goals:[]});});
+
+test('дневной фокус выбирает незавершённую привычку, не меняя порядок',()=>{
+  const first=sample(),second=sample(),third=sample();
+  const a=markDay(first,'2026-11-21').goal;
+  const list=[a,second,third];
+  assert.deepEqual(dailySummary(list,'2026-11-21'),{done:1,total:3,nextGoalId:second.id});
+  assert.deepEqual(list,[a,second,third]);
+});
+test('после выполнения всех привычек дневной фокус больше не предлагается',()=>{
+  const a=markDay(sample(),'2026-11-21').goal;
+  assert.deepEqual(dailySummary([a],'2026-11-21'),{done:1,total:1,nextGoalId:null});
+  assert.deepEqual(dailySummary([],'2026-11-21'),{done:0,total:0,nextGoalId:null});
+});
+test('дневной фокус на новом дне не использует вчерашнюю отметку',()=>{
+  const g=markDay(sample(),'2026-11-21').goal;
+  assert.deepEqual(dailySummary([g],'2026-11-22'),{done:0,total:1,nextGoalId:g.id});
+});

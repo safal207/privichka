@@ -74,6 +74,13 @@ export function bestStreak(log) {
   for(const day of sorted){ run=prev && shiftDay(prev,1)===day ? run+1 : 1; best=Math.max(best,run);prev=day; }
   return best;
 }
+/** Pure summary for the daily focus card; do not mutate the user's ordering. */
+export function dailySummary(goals, day) {
+  if(!isValidDay(day)) throw new Error('Некорректная дата');
+  const done=goals.filter(g=>doneToday(g,day)).length;
+  const nextGoalId=goals.find(g=>!doneToday(g,day))?.id ?? null;
+  return {done,total:goals.length,nextGoalId};
+}
 export const allDays=goals=>[...new Set(goals.flatMap(g=>g.log))].sort();
 export const milestones=(days)=>[3,7,30].filter(n=>days>=n);
 export const starterState=()=>({version:SCHEMA_VERSION,goals:[]});

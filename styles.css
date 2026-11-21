@@ -6,3 +6,47 @@
 @media(max-width:740px){.shell{padding:0 17px}.site-header{height:75px}.brand{font-size:23px}.brand-mark{width:35px;height:35px}.tab{padding:13px 13px;font-size:12px}main{padding:20px 0 30px}.hero{grid-template-columns:1fr;padding:29px 24px;min-height:0}.hero-art{display:none}h1{letter-spacing:-2px}.lead{font-size:14px}.grid,.about-grid{grid-template-columns:1fr}.stat-grid{gap:8px}.stat{padding:15px}.stat strong{font-size:26px}.stat span{font-size:11px}.card{padding:20px}.goal-heading{flex-direction:column;gap:12px}.footer{gap:12px}.footer .privacy-label{margin-left:0;width:100%}.section-head{margin:27px 0 13px}.days{gap:4px}.day{min-height:43px;border-radius:8px}.goal-dialog{max-height:94dvh}.form-body{max-height:calc(94dvh - 190px);padding:19px}.dialog-head,.dialog-footer{padding:17px 19px}}
 @media(max-width:380px){.site-header .button{font-size:11px;padding:9px 10px}.brand{font-size:21px}.tab{padding:13px 10px;font-size:11px}.card-actions .button{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* Daily-first flow: keep the next actionable step visible before the rest of the dashboard. */
+.starter-choices{margin-top:20px;display:grid;gap:9px}
+.starter-choices>span{color:#4c6751;font-size:12px;font-weight:700}
+.starter-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.onboarding-hero .chip{background:#fff;border-color:#d2e3c8;min-height:42px}
+.start-guide{margin-top:18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.start-guide>div{display:flex;align-items:center;gap:12px;padding:17px 20px;background:#fff;border:1px solid var(--edge);border-radius:15px;font-size:13px;font-weight:700}
+.start-guide b{font-size:12px;color:var(--green)}
+.today-intro{border-radius:24px;background:#eaf1e4;padding:clamp(22px,4vw,36px);display:flex;justify-content:space-between;align-items:center;gap:18px}
+.today-intro h1{font-size:clamp(28px,4vw,44px);line-height:1.15;letter-spacing:-1.8px;margin-bottom:10px}
+.today-intro .lead{font-size:14px;margin:0;max-width:630px}
+.today-counter{flex-shrink:0;width:148px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:19px;background:#fff}
+.today-counter strong{font-size:42px;letter-spacing:-2px;font-weight:800;line-height:1.1}
+.today-counter strong span{font-size:20px;color:var(--sub);letter-spacing:0}
+.today-counter small{font-size:11px;color:var(--sub);font-weight:700;margin-top:6px}
+.daily-card-featured{padding:clamp(21px,3vw,34px);border:2px solid #bddf8b;background:#fff;max-width:800px}
+.daily-card-featured .card-title{font-size:clamp(22px,3vw,29px)}
+.daily-card-featured .next-step strong{font-size:18px}
+.daily-card .next-step strong{display:block;font-weight:800;line-height:1.5}
+.daily-card-done .next-step{background:#f5f7f3}
+.daily-card .card-actions{margin-top:16px}
+.daily-card-featured .button-primary{min-width:190px}
+.tiny-hint{font-size:12px;color:#526956;line-height:1.55;margin:0 0 10px}
+.success-inline{background:#eaf7df;border:1px solid #cce6ba;border-radius:15px;padding:12px 16px;margin:13px 0;display:grid;gap:4px;font-size:13px;color:#24532d}
+.success-inline span{font-size:12px}
+.all-done{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;border:1px solid #c8e0c1;border-radius:17px;background:#f4faef;padding:16px 20px;margin-top:16px}
+.all-done strong{font-size:14px}.all-done span{font-size:13px;color:var(--sub);flex:1}
+@media(max-width:740px){
+ .start-guide{grid-template-columns:1fr;gap:7px}
+ .start-guide>div{padding:13px 16px}
+ .today-intro{padding:22px;align-items:flex-start}
+ .today-counter{width:86px;min-height:84px;border-radius:13px}
+ .today-counter strong{font-size:26px}.today-counter strong span{font-size:13px}
+ .today-counter small{font-size:9px;text-align:center;padding:0 3px}
+ .daily-card-featured{max-width:100%}
+}
+@media(max-width:380px){
+ .today-intro{gap:9px;padding:18px}
+ .today-intro h1{font-size:25px}
+ .today-counter{width:73px}
+ .today-counter strong{font-size:24px}
+ .starter-buttons .chip{font-size:11px;padding:8px 10px}
+}
