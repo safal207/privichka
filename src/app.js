@@ -1,5 +1,6 @@
 import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary,COMPANIONS} from './core.mjs';
 import {activitySeries,activityValues,activitySummary} from './activity.mjs';
+import {activityReaction} from './companion-reactions.mjs';
 
 const content=document.querySelector('#content');
 const dialog=document.querySelector('#goal-dialog');
@@ -46,6 +47,11 @@ const companionPhrase=(kind)=>{
     pushi:{hello:'Погнали? Даже пара минут — уже большой шаг!',success:'Вау! Ты справился. Дай пять!',all:'Все шаги на сегодня сделаны. Отдыхай!'},
     bubo:{hello:'Не торопись. Один маленький шаг — это уже здорово.',success:'Как приятно! Я рад твоему маленькому успеху.',all:'Сегодня всё готово. Спасибо, что заботишься о себе!'},
   };
+  if(kind==='success' && state.companionId){
+    const facts=activityReaction(myGoals(),today());
+    if(['first','milestone','return','record','rise'].includes(facts.kind))
+      return activityVoice(state.companionId,facts).text;
+  }
   return phrases[state.companionId]?.[kind]??'';
 };
 function companionGreeting(kind='hello'){
@@ -158,6 +164,49 @@ function goalsPage(){return `${head('Мои большие цели','Кажду
 function calendar(log,end,count=14){const set=new Set(log);return `<div class="days" aria-label="Выполнение по дням">${Array.from({length:count},(_,i)=>{const day=shiftDay(end,i-count+1);const done=set.has(day);return `<div title="${h(day)} — ${done?'сделано':'нет отметки'}" class="day ${done?'done':'missed'} ${day===end?'today':''}" aria-label="${h(day)}: ${done?'отмечено':'нет отметки'}"><span>${dayName(day)}</span><b>${Number(day.slice(8))}${done?' ✓':''}</b></div>`;}).join('')}</div>`;}
 
 /** Accessible native SVG time series without analytics SDKs or external scripts. */
+
+/** Two friendly voices, driven by actual daily check-ins and milestones. */
+function activityVoice(id,f) {
+  const dayLabel=f.milestone===3?'3 активных дня':f.milestone===7?'7 активных дней':'30 активных дней';
+  const isToday=f.isToday;
+  const voices={
+    pushi:{
+      empty:['Погнали с первого шага!','Здесь скоро появятся твои победы. Начни с привычки на пару минут.'],
+      idle:['Всё ещё впереди!',isToday?'У тебя уже '+f.lifetimeActiveDays+' активных дней. Сегодня можно сделать шаг в своём темпе.':'В этот день отметок нет. Твой путь от этого никуда не исчезает.'],
+      first:['Вот это старт!','Твой первый активный день появился на графике. Дай пять!'],
+      milestone:['Новая награда! '+dayLabel,'Ты возвращался к своим привычкам '+f.milestone+' разных дней. Это уже история успеха!'],
+      return:['С возвращением!','Пауза закончилась новым маленьким шагом. Круто, что ты снова здесь!'],
+      record:['Личный рекорд дня!','В этот день отмечено '+f.count+' привычек — твой новый максимум!'],
+      rise:['Смотри, график растёт!','За последние 7 дней '+f.weekCount+' отметок против '+f.previousWeekCount+' в предыдущие семь. Движение видно!'],
+      steady:['Двигаемся дальше!','В этот день '+f.count+' выполненных привычек. Каждый шаг добавляет точку на графике!']
+    },
+    bubo:{
+      empty:['Начнём спокойно','Выбери небольшой шаг, который тебе приятен. Я буду рядом.'],
+      idle:['Спешить некуда',isToday?'В твоей истории уже '+f.lifetimeActiveDays+' активных дней. Можно продолжить, когда будет удобно.':'На этой дате нет отметок. Пропуски не стирают то, что уже сделано.'],
+      first:['Первый шаг в истории','Отличное начало. Маленькое действие — настоящий прогресс.'],
+      milestone:['Достижение: '+dayLabel,'Ты уделил привычкам время в '+f.milestone+' разных дней. Я рад за тебя.'],
+      return:['Рад твоему возвращению','Даже после паузы можно продолжать. Этот день — доказательство.'],
+      record:['Ты удивил самого себя','В этот день '+f.count+' выполненных привычек. Это больше прежнего максимума.'],
+      rise:['Твоя активность растёт','За 7 дней '+f.weekCount+' отметок, в предыдущие семь — '+f.previousWeekCount+'. Ты постепенно находишь свой ритм.'],
+      steady:['Хороший шаг','В этот день выполнено '+f.count+' привычек. Не нужно торопиться, чтобы двигаться вперёд.']
+    }
+  };
+  const message=voices[id]?.[f.kind]||voices.bubo.steady;
+  return {title:message[0],text:message[1]};
+}
+function activityCoach(goals,focusDay=today()){
+  const character=currentCompanion();
+  if(!character)return '';
+  const facts=activityReaction(goals,today(),focusDay);
+  const voice=activityVoice(character.id,facts);
+  const label=focusDay.slice(8)+'.'+focusDay.slice(5,7)+'.'+focusDay.slice(0,4);
+  return '<aside class="activity-companion activity-companion-'+character.id+'" data-reaction="'+facts.kind+'" aria-live="polite" aria-atomic="true" aria-label="Реакция героя на активность">'
+    +'<div class="activity-companion-portrait"><img src="'+companionArt(character.id)+'" alt="" loading="lazy" decoding="async" width="146" height="146"></div>'
+    +'<div class="activity-companion-copy"><span class="activity-companion-kicker">'+h(character.name)+' · '+label+'</span>'
+    +'<strong>'+h(voice.title)+'</strong><p>'+h(voice.text)+'</p>'
+    +'<span class="activity-companion-meta">'+facts.count+' отметок в выбранный день · '+facts.activeDays+' активных дней к этой дате</span></div></aside>';
+}
+
 function activityChart(goals){
   const end=today(),series=activitySeries(goals,end,activityPeriod);
   const values=activityValues(series,activityMode),info=activitySummary(series);
@@ -190,6 +239,7 @@ function activityChart(goals){
     <div class="activity-head"><div><p class="eyebrow">КАРТА ТВОИХ ДЕЙСТВИЙ</p><h3 id="activity-heading">Моя активность · X/Y</h3>
     <p class="section-caption">Каждая точка — день. По горизонтали — дата, по вертикали — число выполненных привычек.</p></div>
     <div class="activity-summary"><span><strong>${info.total}</strong><small>выполнений</small></span><span><strong>${info.activeDays}</strong><small>активных дней</small></span><span><strong>${info.peak}</strong><small>пик за день</small></span></div></div>
+    ${activityCoach(goals)}
     <div class="activity-controls"><div class="activity-control" role="group" aria-label="Период графика"><span>Период</span>${periodButtons}</div>
     <div class="activity-control" role="group" aria-label="Режим графика"><span>Показать</span>${modeButtons}</div></div>
     <div class="activity-scroll" tabindex="0" role="region" aria-label="График активности с прокруткой по горизонтали">
@@ -218,6 +268,8 @@ function selectActivityPoint(point){
   insight.textContent=activityMode==='daily'
     ? `${label}: выполнено привычек — ${count}.`
     : `${label}: выполнено за день — ${count}, накоплено за период — ${value}.`;
+  const coach=wrap.querySelector('.activity-companion');
+  if(coach)coach.outerHTML=activityCoach(myGoals(),point.dataset.activityDay);
 }
 
 function progressPage(){const goals=myGoals(),days=allDays(goals),completed=goals.filter(g=>progress(g)===100).length,current=streak(days,today()),best=bestStreak(days);return `${head('Ваш прогресс','Каждый шаг остаётся в истории — даже если был пропуск.')}<div class="stat-grid"><div class="stat"><strong>${days.length}</strong><span>дней с действиями</span></div><div class="stat"><strong>${current}</strong><span>дней текущей серии</span></div><div class="stat"><strong>${completed}</strong><span>целей достигнуто</span></div></div>${activityChart(goals)}<div class="card" style="margin-top:18px"><h3>Последние 14 дней</h3>${calendar(days,today(),14)}<p class="habit-legend">Выделены дни с хотя бы одной выполненной привычкой. Лучшая серия — ${best} дней.</p><h3 style="margin:26px 0 10px">Ваши достижения</h3><div class="achievements">${[3,7,30].map(n=>`<div class="achievement ${milestones(days.length).includes(n)?'':'locked'}">${milestones(days.length).includes(n)?'★':'◇'} ${n} дней действий</div>`).join('')}</div></div>${goals.length?`${head('По каждой привычке')}${goals.map(g=>`<div class="card goal-progress"><h3>${h(g.title)}</h3>${smallProgress(g)}<p class="mini-meta">Отмечено дней: ${g.log.length} · текущая серия: ${streak(g.log,today())}</p>${calendar(g.log,today(),7)}</div>`).join('')}`:''}`;}

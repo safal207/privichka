@@ -232,3 +232,48 @@
 @media(prefers-reduced-motion:reduce){
   .activity-filter,.activity-dot{transition:none!important}
 }
+
+
+/* The selected mascot reflects factual activity and milestone states. */
+.activity-companion{
+  display:grid;grid-template-columns:132px minmax(0,1fr);align-items:center;gap:18px;
+  padding:12px 22px 12px 13px;margin:19px 0 18px;
+  border:1px solid #d2e9c9;border-radius:21px;
+  background:linear-gradient(110deg,#e4f6da 0%,#f7fcf3 70%,#fff 100%);
+  box-shadow:0 12px 29px #2b632010;
+}
+.activity-companion-bubo{
+  border-color:#f0d9c5;
+  background:linear-gradient(110deg,#fff0da 0%,#fff8ee 65%,#fff 100%);
+}
+.activity-companion-portrait{
+  width:126px;min-height:126px;display:grid;place-items:center;
+  border-radius:22px;background:#ffffff85;overflow:hidden;
+}
+.activity-companion-portrait img{
+  width:122px;height:122px;object-fit:contain;
+  filter:drop-shadow(0 7px 5px #2e423022);
+}
+.activity-companion-copy{min-width:0;display:flex;flex-direction:column;gap:7px}
+.activity-companion-kicker{color:#46774b;font-size:11px;font-weight:800;letter-spacing:.45px}
+.activity-companion-bubo .activity-companion-kicker{color:#98643d}
+.activity-companion-copy strong{
+  color:#1c4024;font-weight:800;font-size:clamp(19px,2.5vw,25px);line-height:1.25;
+}
+.activity-companion-bubo .activity-companion-copy strong{color:#76411f}
+.activity-companion-copy p{margin:0;line-height:1.55;font-size:13px;color:#536454}
+.activity-companion-meta{font-size:11px;color:#617464;font-weight:700}
+@media(max-width:740px){
+  .activity-companion{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:11px;margin:13px 0 15px;border-radius:17px}
+  .activity-companion-portrait{width:88px;min-height:88px;border-radius:14px}
+  .activity-companion-portrait img{width:86px;height:86px}
+  .activity-companion-copy{gap:5px}
+  .activity-companion-copy strong{font-size:17px}
+  .activity-companion-copy p{font-size:11px;line-height:1.45}
+  .activity-companion-kicker,.activity-companion-meta{font-size:10px}
+}
+@media(max-width:360px){
+  .activity-companion{grid-template-columns:76px minmax(0,1fr)}
+  .activity-companion-portrait{width:74px;min-height:78px}
+  .activity-companion-portrait img{width:74px;height:78px}
+}
