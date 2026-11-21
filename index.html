@@ -26,7 +26,7 @@
       <button class="tab" data-tab="about">Как это работает</button>
     </nav>
     <main id="content" tabindex="-1" aria-live="polite"></main>
-    <footer class="footer"><span>Маленький шаг лучше идеального плана.</span><button class="link-button" data-action="export">Экспорт</button><button class="link-button" data-action="import">Импорт</button><span class="privacy-label">Данные хранятся только на устройстве</span></footer>
+    <footer class="footer"><span>Маленький шаг лучше идеального плана.</span><button class="link-button" data-action="export">Экспорт</button><button class="link-button" data-action="import">Импорт</button><button type="button" class="link-button" data-action="effects">Звуки и вибро</button><span class="privacy-label">Данные хранятся только на устройстве</span></footer>
   </div>
   <dialog id="goal-dialog" class="goal-dialog" aria-labelledby="dialog-title">
     <form id="goal-form" novalidate>
@@ -66,6 +66,33 @@
       </button>
     </div>
     <div class="companion-modal-footer"><button class="companion-later" type="button" data-action="skip-companion">Продолжить без героя</button><span>Новые герои появятся позже. Сейчас выбрать можно только одного из двух.</span></div>
+  </dialog>
+
+  <dialog id="effects-dialog" class="effects-dialog" aria-labelledby="effects-title" aria-describedby="effects-subtitle">
+    <div class="effects-header">
+      <div><span class="eyebrow">ЧУТЬ-ЧУТЬ МАГИИ</span><h2 id="effects-title">Эффекты привычки</h2>
+      <p id="effects-subtitle">Звук и вибрация по желанию. Ничего не включается само собой.</p></div>
+      <button type="button" class="icon-button" data-action="close-effects" aria-label="Закрыть настройки эффектов">✕</button>
+    </div>
+    <div class="effects-preview">
+      <img id="effects-preview-image" src="assets/companions/pushi.webp" alt="" width="96" height="96">
+      <div><strong id="effects-preview-name">Привычка</strong><p>Выполнил шаг? Давай отпразднуем!</p></div>
+    </div>
+    <div class="effects-settings">
+      <label class="effects-setting"><span class="effects-copy"><strong>♪ Звуки успеха</strong><small id="effect-sound-note">Короткий сигнал после выполнения шага.</small></span>
+      <input type="checkbox" data-effect-setting="sound" aria-describedby="effect-sound-note"></label>
+      <label class="effects-setting"><span class="effects-copy"><strong>⌁ Вибрация</strong><small id="effect-haptics-note">Короткий отклик на совместимых устройствах.</small></span>
+      <input type="checkbox" data-effect-setting="haptics" aria-describedby="effect-haptics-note"></label>
+      <label class="effects-setting"><span class="effects-copy"><strong>✦ Анимации</strong><small>Пуши или Бубо слегка подпрыгнет при выполнении.</small></span>
+      <input type="checkbox" data-effect-setting="animation"></label>
+    </div>
+    <div class="effects-footer">
+      <p>Эффекты не влияют на достижения. Можно отключить всё в любой момент.</p>
+      <div class="effects-actions">
+        <button type="button" class="button button-outline" data-action="preview-effects">Проверить отклик</button>
+        <button type="button" class="button button-primary" data-action="close-effects">Готово</button>
+      </div>
+    </div>
   </dialog>
   <input id="import-file" type="file" accept="application/json,.json" hidden>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

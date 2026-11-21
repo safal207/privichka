@@ -1,6 +1,7 @@
 import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary,COMPANIONS} from './core.mjs';
 import {activitySeries,activityValues,activitySummary} from './activity.mjs';
 import {activityReaction} from './companion-reactions.mjs';
+import {EFFECTS_KEY,normalizeEffects,feedbackPlan} from './feedback.mjs';
 
 const content=document.querySelector('#content');
 const dialog=document.querySelector('#goal-dialog');
@@ -9,9 +10,11 @@ const form=document.querySelector('#goal-form');
 const inputSteps=document.querySelector('#step-inputs');
 const fileInput=document.querySelector('#import-file');
 const toastBox=document.querySelector('#toast');
+const effectsDialog=document.querySelector('#effects-dialog');
 let currentTab='today', editingId=null, lastDay=localDay(), toastTimer, celebratedId=null;
 let activityPeriod=14,activityMode='daily';
 let state=loadState();
+let effectsSettings=loadEffects(),soundContext=null;
 
 function loadState(){
   try {
@@ -24,6 +27,100 @@ function loadState(){
     return starterState();
   }
 }
+
+/**
+ * Effects are local, optional and separate from the goals backup schema.
+ * No notifications are requested and no sound plays without a direct click.
+ */
+function loadEffects(){
+  try{
+    const raw=localStorage.getItem(EFFECTS_KEY);
+    return normalizeEffects(raw?JSON.parse(raw):null);
+  }catch{return normalizeEffects(null);}
+}
+function saveEffects(next){
+  try{
+    localStorage.setItem(EFFECTS_KEY,JSON.stringify(next));
+    effectsSettings=next;
+    return true;
+  }catch{
+    toast('Не удалось сохранить настройки эффектов в браузере.');
+    return false;
+  }
+}
+function supportsAudio(){return Boolean(window.AudioContext||window.webkitAudioContext);}
+function supportsHaptics(){return typeof navigator.vibrate==='function';}
+function openEffects(){
+  for(const [name,value] of Object.entries(effectsSettings)){
+    const input=effectsDialog.querySelector('[data-effect-setting="'+name+'"]');
+    if(input)input.checked=value;
+  }
+  const soundInput=effectsDialog.querySelector('[data-effect-setting="sound"]');
+  const vibInput=effectsDialog.querySelector('[data-effect-setting="haptics"]');
+  soundInput.disabled=!supportsAudio();
+  vibInput.disabled=!supportsHaptics();
+  effectsDialog.querySelector('#effect-sound-note').textContent=supportsAudio()
+    ?'Короткий авторский звуковой сигнал после выполненного шага.'
+    :'Этот браузер не поддерживает воспроизведение звуков Web Audio.';
+  effectsDialog.querySelector('#effect-haptics-note').textContent=supportsHaptics()
+    ?'Короткий отклик на совместимых устройствах.'
+    :'Вибрация недоступна в этом браузере или устройстве.';
+  const c=currentCompanion();
+  const img=effectsDialog.querySelector('#effects-preview-image');
+  img.src=companionArt(c?.id??'pushi');
+  img.alt=c?'':'Пример героя Пуши';
+  effectsDialog.querySelector('#effects-preview-name').textContent=c?.name??'Привычка';
+  effectsDialog.showModal();
+}
+/** Web Audio oscillator jingle is generated locally (no network, no media files). */
+function playToneSequence(plan){
+  try{
+    const AudioCtor=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtor)return;
+    if(!soundContext || soundContext.state==='closed')soundContext=new AudioCtor();
+    if(soundContext.state==='suspended'){
+      const promise=soundContext.resume();
+      promise?.catch?.(()=>{});
+    }
+    const start=soundContext.currentTime+0.015;
+    for(let i=0;i<plan.tones.length;i++){
+      const time=start+i*(plan.milestone?0.115:0.13);
+      const osc=soundContext.createOscillator();
+      const gain=soundContext.createGain();
+      osc.type=plan.waveform;
+      osc.frequency.setValueAtTime(plan.tones[i],time);
+      gain.gain.setValueAtTime(0.0001,time);
+      gain.gain.linearRampToValueAtTime(0.035,time+0.018);
+      gain.gain.exponentialRampToValueAtTime(0.001,time+0.15);
+      osc.connect(gain);
+      gain.connect(soundContext.destination);
+      osc.start(time);
+      osc.stop(time+0.155);
+      osc.onended=()=>{osc.disconnect();gain.disconnect();};
+    }
+  }catch{/* Unsupported media/audio policy must never block a completed goal. */}
+}
+function playSuccessEffects(preview=false){
+  const facts=activityReaction(myGoals(),today());
+  const kind=facts.kind==='milestone'?'milestone':'step';
+  const plan=feedbackPlan(effectsSettings,state.companionId,kind,{
+    audio:supportsAudio(),
+    vibrate:supportsHaptics(),
+    reducedMotion:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
+  });
+  if(plan.sound)playToneSequence(plan);
+  if(plan.haptics){
+    try{navigator.vibrate(plan.vibration);}catch{/* Haptic permission/availability differs by browser. */}
+  }
+  if(plan.animate){
+    const scope=preview?effectsDialog:content;
+    const target=preview?scope.querySelector('#effects-preview-image'):scope.querySelector('.companion-celebrate img')??scope.querySelector('.daily-card-done');
+    const surface=preview?scope.querySelector('.effects-preview'):scope.querySelector('.companion-celebrate')??scope.querySelector('.daily-card-done');
+    target?.classList.add('feedback-bounce');
+    surface?.classList.add('feedback-sparkles');
+  }
+}
+
 function save(){
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));return true;}
   catch{toast('Не удалось сохранить изменения. Проверьте доступность памяти браузера.');return false;}
@@ -314,7 +411,12 @@ function editAction(action,id,stepId){const g=goalById(id);if(!g)return;
   if(action==='mark'||action==='undo'){
     const result=(action==='mark'?markDay:undoDay)(g,today());
     if(!result.changed){toast('Сегодня уже отмечено');return;}
-    if(change(s=>({...s,goals:s.goals.map(v=>v.id===id?result.goal:v)}))){celebratedId=action==='mark'?id:null;render();toast(action==='mark'?(progress(result.goal)===100?'Цель достигнута! Привычка продолжается.':'Шаг засчитан! Завтра вас ждёт следующий.'):'Отметка за сегодня отменена');}
+    const previousCelebration=celebratedId;
+    celebratedId=action==='mark'?id:null;
+    if(change(s=>({...s,goals:s.goals.map(v=>v.id===id?result.goal:v)}))){
+      if(action==='mark')playSuccessEffects();
+      toast(action==='mark'?(progress(result.goal)===100?'Цель достигнута! Привычка продолжается.':'Шаг засчитан! Завтра вас ждёт следующий.'):'Отметка за сегодня отменена');
+    }else celebratedId=previousCelebration;
   }
 }
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`privychka-backup-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Резервная копия сохранена');}
@@ -330,6 +432,13 @@ document.addEventListener('click',ev=>{
   const btn=ev.target.closest?.('button[data-tab],button[data-action],button[data-preset],button[data-chart-period],button[data-chart-mode]');if(!btn)return;
   if(btn.dataset.chartPeriod){const n=Number(btn.dataset.chartPeriod);if([7,14,30].includes(n)){activityPeriod=n;render();}return;}
   if(btn.dataset.chartMode){const mode=btn.dataset.chartMode;if(['daily','cumulative'].includes(mode)){activityMode=mode;render();}return;}
+  if(btn.dataset.action==='effects'){openEffects();return;}
+  if(btn.dataset.action==='close-effects'){effectsDialog.close();return;}
+  if(btn.dataset.action==='preview-effects'){
+    if(!effectsSettings.sound&&!effectsSettings.haptics&&!effectsSettings.animation){toast('Включите один из эффектов выше.');return;}
+    playSuccessEffects(true);
+    return;
+  }
   if(btn.dataset.tab){currentTab=btn.dataset.tab;render();content.focus({preventScroll:true});return;}
   if(btn.dataset.action==='companion'){openCompanions();return;}
   if(btn.dataset.action==='choose-companion'||btn.dataset.action==='skip-companion'){
@@ -347,6 +456,15 @@ document.addEventListener('keydown',ev=>{
   if(!['Enter',' '].includes(ev.key))return;
   const point=ev.target.closest?.('[data-activity-day]');if(!point)return;
   ev.preventDefault();selectActivityPoint(point);
+});
+document.addEventListener('change',ev=>{
+  const input=ev.target.closest?.('input[data-effect-setting]');
+  if(!input)return;
+  const prop=input.dataset.effectSetting;
+  if(!['sound','haptics','animation'].includes(prop))return;
+  const previous=effectsSettings;
+  const next=normalizeEffects({...previous,[prop]:input.checked});
+  if(!saveEffects(next))input.checked=previous[prop];
 });
 form.addEventListener('submit',submitGoal);
 fileInput.addEventListener('change',()=>importData(fileInput.files?.[0]));
