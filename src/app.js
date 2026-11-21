@@ -1,5 +1,5 @@
-import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary,COMPANIONS} from './core.mjs';
-import {activitySeries,activityValues,activitySummary} from './activity.mjs';
+import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,milestones,newId,dailySummary,COMPANIONS} from './core.mjs';
+import {activitySeries,activityValues,activitySummary,activityDays} from './activity.mjs';
 import {activityReaction} from './companion-reactions.mjs';
 import {EFFECTS_KEY,normalizeEffects,feedbackPlan} from './feedback.mjs';
 
@@ -136,7 +136,7 @@ const myGoals=()=>state.goals;
 const goalById=id=>myGoals().find(g=>g.id===id);
 const completedToday=()=>state.goals.filter(g=>doneToday(g,today())).length;
 const activeGoals=()=>state.goals.filter(g=>progress(g)<100);
-const totalDays=()=>allDays(myGoals()).length;
+const totalDays=()=>activityDays(myGoals(),today()).length;
 const currentCompanion=()=>COMPANIONS.find(c=>c.id===state.companionId)??null;
 const companionArt=id=>`assets/companions/${id}.webp`;
 const companionPhrase=(kind)=>{
@@ -273,9 +273,9 @@ function activityVoice(id,f) {
       first:['Вот это старт!','Твой первый активный день появился на графике. Дай пять!'],
       milestone:['Новая награда! '+dayLabel,'Ты возвращался к своим привычкам '+f.milestone+' разных дней. Это уже история успеха!'],
       return:['С возвращением!','Пауза закончилась новым маленьким шагом. Круто, что ты снова здесь!'],
-      record:['Личный рекорд дня!','В этот день отмечено '+f.count+' привычек — твой новый максимум!'],
+      record:['Личный рекорд дня!','В этот день выполнено '+f.count+' действий — твой новый максимум!'],
       rise:['Смотри, график растёт!','За последние 7 дней '+f.weekCount+' отметок против '+f.previousWeekCount+' в предыдущие семь. Движение видно!'],
-      steady:['Двигаемся дальше!','В этот день '+f.count+' выполненных привычек. Каждый шаг добавляет точку на графике!']
+      steady:['Двигаемся дальше!','В этот день '+f.count+' выполненных действий. Каждый шаг добавляет точку на графике!']
     },
     bubo:{
       empty:['Начнём спокойно','Выбери небольшой шаг, который тебе приятен. Я буду рядом.'],
@@ -283,9 +283,9 @@ function activityVoice(id,f) {
       first:['Первый шаг в истории','Отличное начало. Маленькое действие — настоящий прогресс.'],
       milestone:['Достижение: '+dayLabel,'Ты уделил привычкам время в '+f.milestone+' разных дней. Я рад за тебя.'],
       return:['Рад твоему возвращению','Даже после паузы можно продолжать. Этот день — доказательство.'],
-      record:['Ты удивил самого себя','В этот день '+f.count+' выполненных привычек. Это больше прежнего максимума.'],
+      record:['Ты удивил самого себя','В этот день '+f.count+' выполненных действий. Это больше прежнего максимума.'],
       rise:['Твоя активность растёт','За 7 дней '+f.weekCount+' отметок, в предыдущие семь — '+f.previousWeekCount+'. Ты постепенно находишь свой ритм.'],
-      steady:['Хороший шаг','В этот день выполнено '+f.count+' привычек. Не нужно торопиться, чтобы двигаться вперёд.']
+      steady:['Хороший шаг','В этот день выполнено '+f.count+' действий. Не нужно торопиться, чтобы двигаться вперёд.']
     }
   };
   const message=voices[id]?.[f.kind]||voices.bubo.steady;
@@ -301,7 +301,7 @@ function activityCoach(goals,focusDay=today()){
     +'<div class="activity-companion-portrait"><img src="'+companionArt(character.id)+'" alt="" loading="lazy" decoding="async" width="146" height="146"></div>'
     +'<div class="activity-companion-copy"><span class="activity-companion-kicker">'+h(character.name)+' · '+label+'</span>'
     +'<strong>'+h(voice.title)+'</strong><p>'+h(voice.text)+'</p>'
-    +'<span class="activity-companion-meta">'+facts.count+' отметок в выбранный день · '+facts.activeDays+' активных дней к этой дате</span></div></aside>';
+    +'<span class="activity-companion-meta">'+facts.count+' действий в выбранный день · '+facts.activeDays+' активных дней к этой дате</span></div></aside>';
 }
 
 function activityChart(goals){
@@ -326,7 +326,7 @@ function activityChart(goals){
     return `<line x1="${left}" x2="${right}" y1="${y}" y2="${y}" class="activity-grid-line"/><text class="activity-tick" x="${left-10}" y="${y+4}" text-anchor="end">${value}</text>`;
   }).join('');
   const pointsHtml=coords.map(p=>{
-    const description=`${p.day}: ${p.count} выполненных привычек`+(activityMode==='cumulative'?`, ${p.value} накопительно за период`:'');
+    const description=`${p.day}: ${p.count} выполненных действий`+(activityMode==='cumulative'?`, ${p.value} накопительно за период`:'');
     return `<g class="activity-dot ${p.count===0?'activity-dot-zero':''}" role="button" tabindex="0" data-activity-day="${p.day}" data-activity-count="${p.count}" data-activity-value="${p.value}" aria-label="${description}">
       <title>${description}</title><circle class="activity-hit" cx="${p.x}" cy="${p.y}" r="${activityPeriod===30?11:17}"/>
       <circle class="activity-visible-dot" cx="${p.x}" cy="${p.y}" r="${p.count===0?4:6}" aria-hidden="true"/>
@@ -336,7 +336,7 @@ function activityChart(goals){
   const tableRows=values.map(p=>`<tr><th scope="row">${p.day}</th><td>${p.count}</td><td>${activityValuesLabel(p,activityMode)}</td></tr>`).join('');
   return `<section class="card activity-surface" aria-labelledby="activity-heading">
     <div class="activity-head"><div><p class="eyebrow">КАРТА ТВОИХ ДЕЙСТВИЙ</p><h3 id="activity-heading">Моя активность · X/Y</h3>
-    <p class="section-caption">Каждая точка — день. По горизонтали — дата, по вертикали — число выполненных привычек.</p></div>
+    <p class="section-caption">Каждая точка — день. По горизонтали — дата, по вертикали — число выполненных действий.</p></div>
     <div class="activity-summary"><span><strong>${info.total}</strong><small>выполнений</small></span><span><strong>${info.activeDays}</strong><small>активных дней</small></span><span><strong>${info.peak}</strong><small>пик за день</small></span></div></div>
     ${activityCoach(goals)}
     <div class="activity-controls"><div class="activity-control" role="group" aria-label="Период графика"><span>Период</span>${periodButtons}</div>
@@ -350,11 +350,11 @@ function activityChart(goals){
       <polyline points="${points}" fill="none" stroke="#3b8149" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
       ${ticks.map(i=>`<text x="${xx(i)}" y="${bottom+32}" class="activity-tick" text-anchor="middle">${label(values[i].day)}</text>`).join('')}
       ${pointsHtml}
-      <text class="activity-axis-name" x="${left}" y="16">${activityMode==='daily'?'Выполнений в день':'Выполнений с начала периода'}</text>
+      <text class="activity-axis-name" x="${left}" y="16">${activityMode==='daily'?'Действий за день':'Действий с начала периода'}</text>
       <text class="activity-axis-name" x="${right}" y="297" text-anchor="end">Дата →</text>
     </svg></div>
     <p class="activity-insight" id="activity-insight" role="status" aria-live="polite">${hasData?'Нажмите на любую точку — увидите результат за выбранный день.':'Пока нет отметок. Отметьте первый шаг — его точка появится на графике.'}</p>
-    <p class="habit-legend">Учитываются отметки «Сделал шаг» по привычкам. Ручные галочки этапов не включены. ${activityMode==='cumulative'?'Накопительный итог начинается с первого дня выбранного периода.':''}</p>
+    <p class="habit-legend">Учитываются и галочки этапов, и отметки «Сделал шаг». Автоматически выполненный этап не засчитывается повторно. ${activityMode==='cumulative'?'Накопительный итог начинается с первого дня выбранного периода.':''}</p>
     <details class="activity-details"><summary>Посмотреть данные по дням</summary><div class="activity-table-wrap"><table><thead><tr><th scope="col">Дата</th><th scope="col">За день</th><th scope="col">${activityMode==='daily'?'Значение':'Итого за период'}</th></tr></thead><tbody>${tableRows}</tbody></table></div></details>
   </section>`;
 }
@@ -366,13 +366,13 @@ function selectActivityPoint(point){
   const label=point.dataset.activityDay.split('-').reverse().join('.');
   const count=Number(point.dataset.activityCount),value=Number(point.dataset.activityValue);
   insight.textContent=activityMode==='daily'
-    ? `${label}: выполнено привычек — ${count}.`
-    : `${label}: выполнено за день — ${count}, накоплено за период — ${value}.`;
+    ? `${label}: выполнено действий — ${count}.`
+    : `${label}: действий за день — ${count}, накоплено за период — ${value}.`;
   const coach=wrap.querySelector('.activity-companion');
   if(coach)coach.outerHTML=activityCoach(myGoals(),point.dataset.activityDay);
 }
 
-function progressPage(){const goals=myGoals(),days=allDays(goals),completed=goals.filter(g=>progress(g)===100).length,current=streak(days,today()),best=bestStreak(days);return `${head('Ваш прогресс','Каждый шаг остаётся в истории — даже если был пропуск.')}<div class="stat-grid"><div class="stat"><strong>${days.length}</strong><span>дней с действиями</span></div><div class="stat"><strong>${current}</strong><span>дней текущей серии</span></div><div class="stat"><strong>${completed}</strong><span>целей достигнуто</span></div></div>${activityChart(goals)}<div class="card" style="margin-top:18px"><h3>Последние 14 дней</h3>${calendar(days,today(),14)}<p class="habit-legend">Выделены дни с хотя бы одной выполненной привычкой. Лучшая серия — ${best} дней.</p><h3 style="margin:26px 0 10px">Ваши достижения</h3><div class="achievements">${[3,7,30].map(n=>`<div class="achievement ${milestones(days.length).includes(n)?'':'locked'}">${milestones(days.length).includes(n)?'★':'◇'} ${n} дней действий</div>`).join('')}</div></div>${goals.length?`${head('По каждой привычке')}${goals.map(g=>`<div class="card goal-progress"><h3>${h(g.title)}</h3>${smallProgress(g)}<p class="mini-meta">Отмечено дней: ${g.log.length} · текущая серия: ${streak(g.log,today())}</p>${calendar(g.log,today(),7)}</div>`).join('')}`:''}`;}
+function progressPage(){const goals=myGoals(),days=activityDays(goals,today()),completed=goals.filter(g=>progress(g)===100).length,current=streak(days,today()),best=bestStreak(days);return `${head('Ваш прогресс','Каждый шаг остаётся в истории — даже если был пропуск.')}<div class="stat-grid"><div class="stat"><strong>${days.length}</strong><span>дней с действиями</span></div><div class="stat"><strong>${current}</strong><span>дней текущей серии</span></div><div class="stat"><strong>${completed}</strong><span>целей достигнуто</span></div></div>${activityChart(goals)}<div class="card" style="margin-top:18px"><h3>Последние 14 дней</h3>${calendar(days,today(),14)}<p class="habit-legend">Выделены дни с хотя бы одной выполненной привычкой. Лучшая серия — ${best} дней.</p><h3 style="margin:26px 0 10px">Ваши достижения</h3><div class="achievements">${[3,7,30].map(n=>`<div class="achievement ${milestones(days.length).includes(n)?'':'locked'}">${milestones(days.length).includes(n)?'★':'◇'} ${n} дней действий</div>`).join('')}</div></div>${goals.length?`${head('По каждой привычке')}${goals.map(g=>`<div class="card goal-progress"><h3>${h(g.title)}</h3>${smallProgress(g)}<p class="mini-meta">Дней с действиями: ${activityDays([g],today()).length} · серия ежедневных отметок: ${streak(g.log,today())}</p>${calendar(activityDays([g],today()),today(),7)}</div>`).join('')}`:''}`;}
 function aboutPage(){return `<div class="hero"><div><p class="eyebrow">ПРОСТАЯ СИСТЕМА</p><h1>Не жди вдохновения. Начни с малого.</h1><p class="lead">Привычка помогает связать большую цель с действием, которое можно повторить завтра.</p><button class="button button-dark" data-action="new">Начать с одной цели</button></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-circle">↗</div></div></div><div class="about-grid"><div class="card"><div class="about-number">1</div><h3>Определите цель</h3><p>Куда хотите прийти и зачем. Разбейте путь на небольшие понятные шаги.</p></div><div class="card"><div class="about-number">2</div><h3>Привяжите действие</h3><p>«После утреннего кофе я занимаюсь пять минут». Чем конкретнее, тем проще начать.</p></div><div class="card"><div class="about-number">3</div><h3>Отмечайте каждый день</h3><p>Получайте следующий шаг и наблюдайте за прогрессом. Пропуск дня не стирает успехов.</p></div></div><div class="card" style="margin-top:20px"><h3>О ваших данных</h3><p class="muted subhead">Регистрация не нужна. Всё хранится в браузере на этом устройстве. Если очистить данные браузера, записи могут исчезнуть — периодически сохраняйте резервную копию через кнопку «Экспорт». Импорт позволяет восстановить их из файла.</p></div>`;}
 function positionActivityChart(){
   if(currentTab!=='progress')return;

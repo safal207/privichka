@@ -1,24 +1,18 @@
 import {isValidDay,shiftDay} from './core.mjs';
+import {activityDayTotals} from './activity.mjs';
 
 const MILESTONES = [3,7,30];
 
 /**
  * Deterministic, local-only facts for the user's mascot.
- * Each habit contributes at most one check-in on a calendar day.
+ * Steps and daily check-ins count once per actual action (no double counting).
  * All achievements use distinct active calendar days, not a fragile streak.
  * An earlier graph point never receives credit for activity in later days.
  */
 export function activityReaction(goals,endDay,focusDay=endDay) {
   if(!Array.isArray(goals)||!isValidDay(endDay)||!isValidDay(focusDay)||focusDay>endDay)
     throw new RangeError('Некорректная дата реакции');
-  const counts=new Map();
-  for(const goal of goals) {
-    if(!Array.isArray(goal?.log))continue;
-    for(const day of new Set(goal.log)) {
-      if(!isValidDay(day)||day>endDay)continue;
-      counts.set(day,(counts.get(day)||0)+1);
-    }
-  }
+  const counts=activityDayTotals(goals,endDay);
   const days=[...counts.keys()].sort();
   const earlier=days.filter(day=>day<focusDay);
   const through=days.filter(day=>day<=focusDay);
