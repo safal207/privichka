@@ -17,7 +17,7 @@
         <span class="brand-mark" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="m5 13 5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span>привычка<span class="brand-dot">.</span></span>
       </a>
-      <button class="button button-outline small" data-action="new">+ Новая цель</button>
+      <div class="header-actions"><button type="button" id="companion-shortcut" class="companion-shortcut" data-action="companion" aria-label="Выбрать героя">Мой герой</button><button class="button button-outline small" data-action="new">+ Новая цель</button></div>
     </header>
     <nav class="tabbar" aria-label="Разделы приложения">
       <button class="tab active" data-tab="today" aria-current="page">Сегодня</button>
@@ -46,6 +46,26 @@
       </div>
       <div class="dialog-footer"><button class="button button-outline" type="button" data-action="close">Отмена</button><button class="button button-primary" type="submit">Сохранить цель</button></div>
     </form>
+  </dialog>
+  <dialog id="companion-dialog" class="companion-dialog" aria-labelledby="companion-title" aria-describedby="companion-subtitle">
+    <div class="companion-modal-head">
+      <span class="companion-kicker">ПРИВЫЧКА · ТВОЙ ПУТЬ</span>
+      <h2 id="companion-title">Выбери своего героя</h2>
+      <p id="companion-subtitle">Он будет поддерживать тебя в маленьких шагах. Выбор можно поменять в любой момент.</p>
+    </div>
+    <div class="companion-options">
+      <button class="companion-option companion-option-green" type="button" data-action="choose-companion" data-companion="pushi" aria-pressed="false">
+        <span class="companion-photo"><img src="assets/companions/pushi.svg" alt="Мятный пушистый зверёк с рюкзачком машет лапкой" width="400" height="380"></span>
+        <span class="companion-option-name">Пуши</span><span class="companion-desc">Любит приключения, подбадривает и празднует каждый шаг.</span>
+        <span class="companion-option-choose">Выбрать Пуши <span aria-hidden="true">→</span></span>
+      </button>
+      <button class="companion-option companion-option-peach" type="button" data-action="choose-companion" data-companion="bubo" aria-pressed="false">
+        <span class="companion-photo"><img src="assets/companions/bubo.svg" alt="Персиковый пушистый зверёк в наушниках держит блокнот" width="400" height="380"></span>
+        <span class="companion-option-name">Бубо</span><span class="companion-desc">Помогает не спешить, заботится и поддерживает после пропуска.</span>
+        <span class="companion-option-choose">Выбрать Бубо <span aria-hidden="true">→</span></span>
+      </button>
+    </div>
+    <div class="companion-modal-footer"><button class="companion-later" type="button" data-action="skip-companion">Продолжить без героя</button><span>Со временем могут появиться новые друзья.</span></div>
   </dialog>
   <input id="import-file" type="file" accept="application/json,.json" hidden>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

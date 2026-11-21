@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 380" role="img" aria-labelledby="title"><title id="title">Бубо</title>
+  <defs><radialGradient id="fur" cx="35%" cy="22%" r="80%"><stop offset="0" stop-color="#fff4d2"/><stop offset=".5" stop-color="#ffcea1"/><stop offset="1" stop-color="#ec8c4a"/></radialGradient>
+  <radialGradient id="belly" cx="38%" cy="20%" r="77%"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#fff4d2"/></radialGradient>
+  <radialGradient id="eye" cx="30%" cy="18%" r="90%"><stop stop-color="#605763"/><stop offset=".65" stop-color="#211a25"/><stop offset="1" stop-color="#121317"/></radialGradient>
+  <filter id="shadow"><feGaussianBlur stdDeviation="9"/></filter><filter id="soft"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+  <ellipse cx="204" cy="350" rx="139" ry="18" fill="#473b5d" opacity=".14" filter="url(#shadow)"/>
+  <ellipse cx="104" cy="112" rx="48" ry="55" transform="rotate(-24 104 112)" fill="url(#fur)" stroke="#ec8c4a" stroke-width="3"/>
+  <ellipse cx="298" cy="111" rx="50" ry="56" transform="rotate(25 298 111)" fill="url(#fur)" stroke="#ec8c4a" stroke-width="3"/>
+  <ellipse cx="104" cy="116" rx="25" ry="31" transform="rotate(-24 104 116)" fill="#fca3ad"/><ellipse cx="297" cy="116" rx="25" ry="31" transform="rotate(24 297 116)" fill="#fca3ad"/>
+  <path d="M188 57Q188 20 214 39Q249 21 237 70" fill="#ffc07a"/>
+  <g><path d="M82 190Q82 74 202 72Q319 77 319 196" fill="none" stroke="#8860c8" stroke-width="28" stroke-linecap="round"/>
+   <path d="M79 192Q79 89 202 89Q323 90 323 193" fill="none" stroke="#bea5ed" stroke-width="13"/>
+   <rect x="54" y="162" width="59" height="93" rx="24" fill="#9f77db" stroke="#7048b5" stroke-width="5"/>
+   <rect x="287" y="162" width="59" height="93" rx="24" fill="#9f77db" stroke="#7048b5" stroke-width="5"/>
+   <path d="m326 196 9 10 16-20" fill="none" stroke="#f4edff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <ellipse cx="201" cy="207" rx="136" ry="139" fill="url(#fur)" stroke="#ec8c4a" stroke-width="2" />
+  <ellipse cx="202" cy="270" rx="85" ry="71" fill="url(#belly)"/>
+  <ellipse cx="132" cy="338" rx="51" ry="23" fill="url(#fur)"/><ellipse cx="272" cy="338" rx="51" ry="23" fill="url(#fur)"/>
+  <g transform="rotate(-8 195 257)"><rect x="159" y="217" width="87" height="104" rx="16" fill="#fff4ed" stroke="#ddbad4" stroke-width="4"/><path d="M177 244h12m-12 25h12m-12 25h12" stroke="#72b658" stroke-width="6" stroke-linecap="round"/><path d="M199 244h28m-28 25h28m-28 25h28" stroke="#bfadc1" stroke-width="4" stroke-linecap="round"/></g>
+  <ellipse cx="93" cy="254" rx="40" ry="45" transform="rotate(-25 93 254)" fill="url(#fur)"/><ellipse cx="305" cy="254" rx="40" ry="45" transform="rotate(25 305 254)" fill="url(#fur)"/>
+  <path d="M120 132Q135 120 153 127M246 127Q266 119 280 132" stroke="#456147" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <ellipse cx="147" cy="173" rx="29" ry="37" fill="#ffffff"/><ellipse cx="251" cy="173" rx="29" ry="37" fill="#ffffff"/>
+  <ellipse cx="149" cy="176" rx="21" ry="29" fill="url(#eye)"/><ellipse cx="249" cy="176" rx="21" ry="29" fill="url(#eye)"/>
+  <circle cx="140" cy="161" r="9" fill="white"/><circle cx="240" cy="161" r="9" fill="white"/>
+  <ellipse cx="104" cy="207" rx="27" ry="14" fill="#ffa9b6" opacity=".72" filter="url(#soft)"/>
+  <ellipse cx="298" cy="207" rx="27" ry="14" fill="#ffa9b6" opacity=".72" filter="url(#soft)"/>
+  <path d="M177 209Q200 242 226 209Z" fill="#752f39"/><path d="M190 218Q202 218 213 228Q198 239 190 218" fill="#fa839b"/>
+  <ellipse cx="199" cy="203" rx="8" ry="5" fill="#66514d"/>
+  </svg>

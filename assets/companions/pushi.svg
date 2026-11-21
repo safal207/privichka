@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 380" role="img" aria-labelledby="title"><title id="title">Пуши</title>
+  <defs><radialGradient id="fur" cx="35%" cy="22%" r="80%"><stop offset="0" stop-color="#ecffdc"/><stop offset=".5" stop-color="#bcefa2"/><stop offset="1" stop-color="#65b763"/></radialGradient>
+  <radialGradient id="belly" cx="38%" cy="20%" r="77%"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#ecffdc"/></radialGradient>
+  <radialGradient id="eye" cx="30%" cy="18%" r="90%"><stop stop-color="#605763"/><stop offset=".65" stop-color="#211a25"/><stop offset="1" stop-color="#121317"/></radialGradient>
+  <filter id="shadow"><feGaussianBlur stdDeviation="9"/></filter><filter id="soft"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+  <ellipse cx="204" cy="350" rx="139" ry="18" fill="#473b5d" opacity=".14" filter="url(#shadow)"/>
+  <ellipse cx="104" cy="112" rx="48" ry="55" transform="rotate(-24 104 112)" fill="url(#fur)" stroke="#65b763" stroke-width="3"/>
+  <ellipse cx="298" cy="111" rx="50" ry="56" transform="rotate(25 298 111)" fill="url(#fur)" stroke="#65b763" stroke-width="3"/>
+  <ellipse cx="104" cy="116" rx="25" ry="31" transform="rotate(-24 104 116)" fill="#f5a6bd"/><ellipse cx="297" cy="116" rx="25" ry="31" transform="rotate(24 297 116)" fill="#f5a6bd"/>
+  <path d="M180 66Q170 22 196 42Q213 14 227 40Q235 60 224 77" fill="#9cd48b"/>
+  <g transform="translate(0 4)">
+   <rect x="51" y="156" width="78" height="136" rx="28" fill="#8b61d0" stroke="#6d45ae" stroke-width="5"/>
+   <path d="M86 155Q87 212 113 253" stroke="#bd95f0" stroke-width="18" fill="none" stroke-linecap="round"/>
+   <rect x="55" y="242" width="58" height="40" rx="15" fill="#aa80e6"/>
+   <path d="m82 278 5 12 13 2-10 9 3 13-11-7-12 7 3-13-10-9 14-2z" fill="#ffcc42"/>
+ </g>
+  <ellipse cx="201" cy="207" rx="136" ry="139" fill="url(#fur)" stroke="#65b763" stroke-width="2" />
+  <ellipse cx="202" cy="270" rx="85" ry="71" fill="url(#belly)"/>
+  <ellipse cx="132" cy="338" rx="51" ry="23" fill="url(#fur)"/><ellipse cx="272" cy="338" rx="51" ry="23" fill="url(#fur)"/>
+  <path d="m168 263 22 22 47-55" fill="none" stroke="#5eb74a" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="94" cy="212" rx="38" ry="51" transform="rotate(-30 94 212)" fill="url(#fur)"/><ellipse cx="310" cy="167" rx="34" ry="52" transform="rotate(35 310 167)" fill="url(#fur)"/><g fill="#f9b1b6"><ellipse cx="317" cy="150" rx="10" ry="8"/><ellipse cx="302" cy="139" rx="6" ry="5"/><ellipse cx="332" cy="139" rx="6" ry="5"/></g>
+  <path d="M120 132Q135 120 153 127M246 127Q266 119 280 132" stroke="#456147" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <ellipse cx="147" cy="173" rx="29" ry="37" fill="#ffffff"/><ellipse cx="251" cy="173" rx="29" ry="37" fill="#ffffff"/>
+  <ellipse cx="149" cy="176" rx="21" ry="29" fill="url(#eye)"/><ellipse cx="249" cy="176" rx="21" ry="29" fill="url(#eye)"/>
+  <circle cx="140" cy="161" r="9" fill="white"/><circle cx="240" cy="161" r="9" fill="white"/>
+  <ellipse cx="104" cy="207" rx="27" ry="14" fill="#ffa9b6" opacity=".72" filter="url(#soft)"/>
+  <ellipse cx="298" cy="207" rx="27" ry="14" fill="#ffa9b6" opacity=".72" filter="url(#soft)"/>
+  <path d="M177 209Q200 242 226 209Z" fill="#752f39"/><path d="M190 218Q202 218 213 228Q198 239 190 218" fill="#fa839b"/>
+  <ellipse cx="199" cy="203" rx="8" ry="5" fill="#66514d"/>
+  </svg>

@@ -50,3 +50,46 @@
  .today-counter strong{font-size:24px}
  .starter-buttons .chip{font-size:11px;padding:8px 10px}
 }
+
+/* Two selectable original mascots, no forced interaction, accessible via header. */
+.header-actions{display:flex;align-items:center;gap:9px}
+.companion-shortcut{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:4px 12px;border:1px solid #d8e4d3;border-radius:999px;background:#f1f7e9;color:var(--ink);font-size:12px;font-weight:800;min-height:44px;white-space:nowrap}
+.companion-shortcut img{width:32px;height:32px;object-fit:contain;border-radius:50%;background:#fff}
+.companion-dialog{border:0;padding:0;border-radius:27px;width:min(810px,calc(100vw - 24px));max-height:min(95dvh,900px);box-shadow:0 24px 90px #18143748;color:#252b2c;overflow-y:auto;background:#fbfafc}
+.companion-dialog::backdrop{background:#0d1727ba;backdrop-filter:blur(4px)}
+.companion-modal-head{text-align:center;padding:30px 28px 16px}
+.companion-kicker{font-size:10px;font-weight:800;color:#70519b;letter-spacing:2px}
+.companion-modal-head h2{font-size:clamp(25px,4vw,40px);letter-spacing:-1.7px;margin:8px 0 9px;color:#25233c}
+.companion-modal-head p{max-width:550px;margin:0 auto;color:#5f6073;line-height:1.6;font-size:13px}
+.companion-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:12px 24px}
+.companion-option{background:#edf8e5;border:2px solid transparent;border-radius:23px;padding:10px 13px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0;min-height:310px;color:#203629;transition:transform .18s,border-color .18s,box-shadow .18s}
+.companion-option:hover{transform:translateY(-3px);box-shadow:0 12px 35px #35411d17}
+.companion-option:focus-visible{outline:3px solid #57388d;outline-offset:2px}
+.companion-option[aria-pressed="true"]{border-color:#4a9d37}
+.companion-option-peach{background:#fff0e2;color:#583521}
+.companion-option-peach[aria-pressed="true"]{border-color:#bd7a34}
+.companion-photo{display:block;width:100%;max-width:275px;aspect-ratio:1.22;overflow:hidden;border-radius:19px;background:#fff8}
+.companion-photo img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+.companion-option-name{font-size:24px;font-weight:800;letter-spacing:-1px}
+.companion-desc{font-size:12px;line-height:1.5;max-width:260px;min-height:36px}
+.companion-option-choose{width:100%;margin-top:auto;padding:11px 14px;border-radius:13px;background:#45982f;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:9px}
+.companion-option-peach .companion-option-choose{background:#ae682f}
+.companion-modal-footer{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:4px 26px 22px;color:#707083;font-size:11px}
+.companion-later{border:0;background:transparent;padding:12px 4px;color:#513777;text-decoration:underline;text-underline-offset:3px;font-weight:800;font-size:12px}
+.companion-greeting{display:flex;align-items:center;gap:12px;width:min(620px,100%);margin:0 0 19px}
+.companion-greeting img{width:86px;height:86px;object-fit:contain;border-radius:50%;flex-shrink:0;background:#f0f6eb;border:2px solid #e5eddf}
+.companion-speech{background:white;border:1px solid #e5e8e2;border-radius:18px;padding:14px 17px;box-shadow:var(--shadow);min-width:0;flex:1}
+.companion-speech strong{font-size:13px;color:#2b693d}
+.companion-speech p{font-size:13px;line-height:1.55;color:var(--sub);margin:5px 0 0}
+.companion-celebrate{margin:12px 0}
+.companion-celebrate .companion-speech{background:#f1fae7}
+.hero-mascot{width:min(100%,240px);aspect-ratio:1;object-fit:contain;border-radius:50%;border:6px solid #f8fdf4;box-shadow:0 10px 32px #395b3929}
+@media(max-width:740px){
+ .companion-shortcut{padding:4px 8px;font-size:11px}.companion-shortcut img{width:26px;height:26px}.header-actions{gap:7px}
+ .companion-modal-head{padding:18px 15px 6px}.companion-options{gap:9px;padding:8px 12px}
+ .companion-option{padding:7px 7px 10px;border-radius:17px;min-height:0;gap:7px}
+ .companion-photo{aspect-ratio:1.1;border-radius:12px}.companion-option-name{font-size:20px}
+ .companion-desc{font-size:11px;line-height:1.4;min-height:47px}.companion-option-choose{padding:11px 4px;font-size:11px}
+ .companion-modal-footer{padding:4px 14px 15px;flex-wrap:wrap;gap:3px}.companion-dialog{max-height:94dvh}
+}
+@media(max-width:380px){.site-header{gap:5px}.brand{gap:5px;font-size:20px}.header-actions .button{padding:9px 8px;font-size:10px}.companion-shortcut{font-size:10px}.companion-desc{font-size:10px}}

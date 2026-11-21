@@ -1,5 +1,13 @@
 export const SCHEMA_VERSION = 1;
 export const STORAGE_KEY = 'privychka:v1';
+// Registry allows future companions without changing the user's data format.
+export const COMPANIONS = Object.freeze([
+  Object.freeze({id:'pushi',name:'Пуши',tagline:'Энергичный, весёлый и любопытный'}),
+  Object.freeze({id:'bubo',name:'Бубо',tagline:'Спокойный, заботливый и внимательный'}),
+]);
+export function normalizeCompanionId(id) {
+  return id==='none'||COMPANIONS.some(c=>c.id===id)?id:null;
+}
 
 export const PRESETS = {
   python: {
@@ -83,7 +91,7 @@ export function dailySummary(goals, day) {
 }
 export const allDays=goals=>[...new Set(goals.flatMap(g=>g.log))].sort();
 export const milestones=(days)=>[3,7,30].filter(n=>days>=n);
-export const starterState=()=>({version:SCHEMA_VERSION,goals:[]});
+export const starterState=()=>({version:SCHEMA_VERSION,goals:[],companionId:null});
 export function normalizeState(input) {
   if(!input || typeof input!=='object' || Array.isArray(input) || input.version!==SCHEMA_VERSION || !Array.isArray(input.goals)) throw new Error('Несовместимый формат файла');
   if(input.goals.length>100) throw new Error('В файле слишком много целей');
@@ -104,5 +112,5 @@ export function normalizeState(input) {
     return {id,title,reason:safeText(g.reason,220),createdAt:isValidDay(g.createdAt)?g.createdAt:localDay(),
       habit:{trigger,action,minutes:Math.min(240,Math.max(1,Number.parseInt(g.habit.minutes,10)||5))},steps,log};
   });
-  return {version:SCHEMA_VERSION,goals};
+  return {version:SCHEMA_VERSION,goals,companionId:normalizeCompanionId(input.companionId)};
 }

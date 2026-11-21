@@ -1,7 +1,8 @@
-import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary} from './core.mjs';
+import {STORAGE_KEY,PRESETS,starterState,normalizeState,createGoal,localDay,shiftDay,progress,nextStep,completedSteps,markDay,undoDay,toggleStep,doneToday,streak,bestStreak,allDays,milestones,newId,dailySummary,COMPANIONS} from './core.mjs';
 
 const content=document.querySelector('#content');
 const dialog=document.querySelector('#goal-dialog');
+const companionDialog=document.querySelector('#companion-dialog');
 const form=document.querySelector('#goal-form');
 const inputSteps=document.querySelector('#step-inputs');
 const fileInput=document.querySelector('#import-file');
@@ -36,6 +37,33 @@ const goalById=id=>myGoals().find(g=>g.id===id);
 const completedToday=()=>state.goals.filter(g=>doneToday(g,today())).length;
 const activeGoals=()=>state.goals.filter(g=>progress(g)<100);
 const totalDays=()=>allDays(myGoals()).length;
+const currentCompanion=()=>COMPANIONS.find(c=>c.id===state.companionId)??null;
+const companionArt=id=>`assets/companions/${id}.svg`;
+const companionPhrase=(kind)=>{
+  const phrases={
+    pushi:{hello:'Погнали? Даже пара минут — уже большой шаг!',success:'Вау! Ты справился. Дай пять!',all:'Все шаги на сегодня сделаны. Отдыхай!'},
+    bubo:{hello:'Не торопись. Один маленький шаг — это уже здорово.',success:'Как приятно! Я рад твоему маленькому успеху.',all:'Сегодня всё готово. Спасибо, что заботишься о себе!'},
+  };
+  return phrases[state.companionId]?.[kind]??'';
+};
+function companionGreeting(kind='hello'){
+  const c=currentCompanion();if(!c)return '';
+  return `<aside class="companion-greeting ${kind==='success'?'companion-celebrate':''}" aria-label="Сообщение героя ${c.name}"><img src="${companionArt(c.id)}" alt="" width="88" height="88"><div class="companion-speech"><strong>${c.name} говорит:</strong><p>${companionPhrase(kind)}</p></div></aside>`;
+}
+function renderCompanionHeader(){
+  const c=currentCompanion(),b=document.querySelector('#companion-shortcut');
+  if(!b)return;
+  b.innerHTML=c?`<img src="${companionArt(c.id)}" alt="" width="34" height="34"><span>${c.name}</span>`:'<span>Мой герой</span>';
+  b.setAttribute('aria-label',c?`Сменить героя. Сейчас выбран ${c.name}`:'Выбрать героя');
+}
+function openCompanions(){
+  const current=state.companionId;
+  companionDialog.querySelectorAll('[data-companion]').forEach(b=>{
+    const selected=b.dataset.companion===current;
+    b.setAttribute('aria-pressed',String(selected));b.classList.toggle('selected',selected);
+  });
+  companionDialog.showModal();
+}
 
 function head(text,subtitle='') {return `<div class="section-head"><div><h2>${h(text)}</h2>${subtitle?`<p class="section-caption">${h(subtitle)}</p>`:''}</div></div>`;}
 function hero(){
@@ -55,14 +83,14 @@ function hero(){
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
-      <div class="hero-orbit"></div><div class="hero-circle">✓</div>
+      ${currentCompanion()?`<img class="hero-mascot" src="${companionArt(state.companionId)}" alt="">`:'<div class="hero-orbit"></div><div class="hero-circle">✓</div>'}
       <div class="hero-spark">✳</div><div class="hero-small">Начните с пяти минут</div>
     </div>
   </section>`;
 }
 function todayIntro(summary){
   const complete=summary.total>0 && summary.done===summary.total;
-  return `<section class="today-intro">
+  return `${companionGreeting(complete?'all':'hello')}<section class="today-intro">
     <div><p class="eyebrow">ВАШ ДЕНЬ · ${h(today().split('-').reverse().join('.'))}</p>
       <h1>${complete?'На сегодня — сделано!':'Сегодня достаточно одного шага.'}</h1>
       <p class="lead">${complete?'Все привычки отмечены. Прогресс сохраняется — возвращайтесь завтра.':'Выберите действие, выполните его и возвращайтесь к своему дню.'}</p>
@@ -93,7 +121,7 @@ function todayCard(g,featured=false){
        <button class="button button-outline small" data-tab="goals">В работе ↗</button>`
     : `<button class="button button-primary" data-action="mark" data-id="${escapeId(g.id)}">✓ Сделал шаг</button>`;
   const celebration=done && celebratedId===g.id
-    ? `<div class="success-inline" role="status"><strong>Шаг засчитан!</strong><span>Прогресс сохранён. Вы вернётесь к следующему шагу завтра.</span></div>`:'';
+    ? `${companionGreeting('success')}<div class="success-inline" role="status"><strong>Шаг засчитан!</strong><span>Прогресс сохранён. Вы вернётесь к следующему шагу завтра.</span></div>`:'';
   return `<article class="card daily-card ${featured?'daily-card-featured':''} ${done?'daily-card-done':''}">
     <div class="goal-heading"><div><p class="habit-label">${featured?'ГЛАВНЫЙ ШАГ СЕГОДНЯ':'МОЯ ПРИВЫЧКА'}</p>
       <h3 class="card-title">${h(g.title)}</h3></div>
@@ -109,7 +137,7 @@ function todayCard(g,featured=false){
 }
 function todayPage(){
   const goals=myGoals();
-  if(!goals.length)return `${hero()}${startGuide()}`;
+  if(!goals.length)return `${companionGreeting()}${hero()}${startGuide()}`;
   const summary=dailySummary(goals,today());
   const featured=goals.find(g=>g.id===summary.nextGoalId)??goals[0];
   const others=goals.filter(g=>g.id!==featured.id);
@@ -128,7 +156,7 @@ function goalsPage(){return `${head('Мои большие цели','Кажду
 function calendar(log,end,count=14){const set=new Set(log);return `<div class="days" aria-label="Выполнение по дням">${Array.from({length:count},(_,i)=>{const day=shiftDay(end,i-count+1);const done=set.has(day);return `<div title="${h(day)} — ${done?'сделано':'нет отметки'}" class="day ${done?'done':'missed'} ${day===end?'today':''}" aria-label="${h(day)}: ${done?'отмечено':'нет отметки'}"><span>${dayName(day)}</span><b>${Number(day.slice(8))}${done?' ✓':''}</b></div>`;}).join('')}</div>`;}
 function progressPage(){const goals=myGoals(),days=allDays(goals),completed=goals.filter(g=>progress(g)===100).length,current=streak(days,today()),best=bestStreak(days);return `${head('Ваш прогресс','Каждый шаг остаётся в истории — даже если был пропуск.')}<div class="stat-grid"><div class="stat"><strong>${days.length}</strong><span>дней с действиями</span></div><div class="stat"><strong>${current}</strong><span>дней текущей серии</span></div><div class="stat"><strong>${completed}</strong><span>целей достигнуто</span></div></div><div class="card" style="margin-top:18px"><h3>Последние 14 дней</h3>${calendar(days,today(),14)}<p class="habit-legend">Выделены дни с хотя бы одной выполненной привычкой. Лучшая серия — ${best} дней.</p><h3 style="margin:26px 0 10px">Ваши достижения</h3><div class="achievements">${[3,7,30].map(n=>`<div class="achievement ${milestones(days.length).includes(n)?'':'locked'}">${milestones(days.length).includes(n)?'★':'◇'} ${n} дней действий</div>`).join('')}</div></div>${goals.length?`${head('По каждой привычке')}${goals.map(g=>`<div class="card goal-progress"><h3>${h(g.title)}</h3>${smallProgress(g)}<p class="mini-meta">Отмечено дней: ${g.log.length} · текущая серия: ${streak(g.log,today())}</p>${calendar(g.log,today(),7)}</div>`).join('')}`:''}`;}
 function aboutPage(){return `<div class="hero"><div><p class="eyebrow">ПРОСТАЯ СИСТЕМА</p><h1>Не жди вдохновения. Начни с малого.</h1><p class="lead">Привычка помогает связать большую цель с действием, которое можно повторить завтра.</p><button class="button button-dark" data-action="new">Начать с одной цели</button></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-circle">↗</div></div></div><div class="about-grid"><div class="card"><div class="about-number">1</div><h3>Определите цель</h3><p>Куда хотите прийти и зачем. Разбейте путь на небольшие понятные шаги.</p></div><div class="card"><div class="about-number">2</div><h3>Привяжите действие</h3><p>«После утреннего кофе я занимаюсь пять минут». Чем конкретнее, тем проще начать.</p></div><div class="card"><div class="about-number">3</div><h3>Отмечайте каждый день</h3><p>Получайте следующий шаг и наблюдайте за прогрессом. Пропуск дня не стирает успехов.</p></div></div><div class="card" style="margin-top:20px"><h3>О ваших данных</h3><p class="muted subhead">Регистрация не нужна. Всё хранится в браузере на этом устройстве. Если очистить данные браузера, записи могут исчезнуть — периодически сохраняйте резервную копию через кнопку «Экспорт». Импорт позволяет восстановить их из файла.</p></div>`;}
-function render(){document.querySelectorAll('[data-tab]').forEach(b=>{const on=b.dataset.tab===currentTab;b.classList.toggle('active',on);on?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});content.innerHTML=({today:todayPage,goals:goalsPage,progress:progressPage,about:aboutPage}[currentTab])();}
+function render(){renderCompanionHeader();document.querySelectorAll('[data-tab]').forEach(b=>{const on=b.dataset.tab===currentTab;b.classList.toggle('active',on);on?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});content.innerHTML=({today:todayPage,goals:goalsPage,progress:progressPage,about:aboutPage}[currentTab])();}
 function addStepRow(step={}){
   if(inputSteps.children.length>=30){toast('Не более 30 шагов для одной цели');return;}
   const row=document.createElement('div'); row.className='step-entry';
@@ -181,6 +209,13 @@ async function importData(file){if(!file)return;
 document.addEventListener('click',ev=>{
   const btn=ev.target.closest('button[data-tab],button[data-action],button[data-preset]');if(!btn)return;
   if(btn.dataset.tab){currentTab=btn.dataset.tab;render();content.focus({preventScroll:true});return;}
+  if(btn.dataset.action==='companion'){openCompanions();return;}
+  if(btn.dataset.action==='choose-companion'||btn.dataset.action==='skip-companion'){
+    const selected=btn.dataset.action==='skip-companion'?'none':btn.dataset.companion;
+    if(!COMPANIONS.some(c=>c.id===selected)&&selected!=='none')return;
+    if(change(s=>({...s,companionId:selected}))){companionDialog.close();toast(selected==='none'?'Героя можно выбрать в любой момент':`Теперь ваш спутник — ${currentCompanion().name}!`);}
+    return;
+  }
   if(btn.dataset.preset){if(!dialog.open)openGoal();fillPreset(btn.dataset.preset);return;}
   const a=btn.dataset.action,id=btn.dataset.id;
   if(a==='new')openGoal();else if(a==='close')dialog.close();else if(a==='add-step')addStepRow();else if(a==='remove-step'){if(inputSteps.children.length===1){toast('Нужен хотя бы один шаг');return;}btn.closest('.step-entry')?.remove();}
@@ -191,3 +226,4 @@ fileInput.addEventListener('change',()=>importData(fileInput.files?.[0]));
 function refreshIfNeeded(){const now=today();if(lastDay!==now){lastDay=now;render();}}
 window.addEventListener('focus',refreshIfNeeded);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshIfNeeded();});setInterval(refreshIfNeeded,60_000);
 render();
+if(state.companionId===null)requestAnimationFrame(openCompanions);
