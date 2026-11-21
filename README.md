@@ -24,7 +24,7 @@ python3 -m http.server 8080
 
 ## Публикация GitHub Pages
 
-Создайте отдельный репозиторий `privichka`, загрузите файлы из этой папки в корень ветки `main`, затем **Settings → Pages → Build and deployment → Deploy from a branch → main / (root)**. Сайт станет доступен по `https://safal207.github.io/privichka/`. Путь в проекте относительный и совместим с GitHub Pages.
+Сайт опубликован по адресу **https://safal207.github.io/privichka/**. Изменения в ветке `main` автоматически запускают `.github/workflows/deploy.yml`: workflow готовит статические файлы, дожидается индексации артефакта и публикует их в GitHub Pages. История и результат публикаций — во вкладке **Actions → Publish Privichka to GitHub Pages**. Источник публикации в **Settings → Pages → Build and deployment** должен быть **GitHub Actions**. Путь к ресурсам относительный и совместим с GitHub Pages.
 
 ## Границы MVP
 
