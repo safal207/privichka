@@ -1,0 +1,17 @@
+name: Quality checks
+on:
+  push:
+  pull_request:
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - name: Check syntax
+        run: |
+          node --check src/core.mjs
+          node --check src/app.js

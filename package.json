@@ -1,0 +1,14 @@
+{
+  "name": "privichka",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Привычка — большая цель, маленький шаг, каждый день",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
