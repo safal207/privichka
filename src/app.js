@@ -38,7 +38,7 @@ const completedToday=()=>state.goals.filter(g=>doneToday(g,today())).length;
 const activeGoals=()=>state.goals.filter(g=>progress(g)<100);
 const totalDays=()=>allDays(myGoals()).length;
 const currentCompanion=()=>COMPANIONS.find(c=>c.id===state.companionId)??null;
-const companionArt=id=>`assets/companions/${id}.svg`;
+const companionArt=id=>`assets/companions/${id}.webp`;
 const companionPhrase=(kind)=>{
   const phrases={
     pushi:{hello:'Погнали? Даже пара минут — уже большой шаг!',success:'Вау! Ты справился. Дай пять!',all:'Все шаги на сегодня сделаны. Отдыхай!'},
