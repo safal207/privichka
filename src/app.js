@@ -12,7 +12,7 @@ const fileInput=document.querySelector('#import-file');
 const toastBox=document.querySelector('#toast');
 const effectsDialog=document.querySelector('#effects-dialog');
 let currentTab='today', editingId=null, lastDay=localDay(), toastTimer, celebratedId=null;
-let activityPeriod=14,activityMode='daily';
+let activityPeriod=window.matchMedia?.('(max-width:740px)')?.matches ? 7 : 14,activityMode='daily';
 let state=loadState();
 let effectsSettings=loadEffects(),soundContext=null;
 
@@ -307,7 +307,9 @@ function activityCoach(goals,focusDay=today()){
 function activityChart(goals){
   const end=today(),series=activitySeries(goals,end,activityPeriod);
   const values=activityValues(series,activityMode),info=activitySummary(series);
-  const left=52,right=725,top=32,bottom=242;
+  const compact=activityPeriod===7 && window.matchMedia?.('(max-width:740px)')?.matches===true;
+  const svgWidth=compact?340:760;
+  const left=compact?36:52,right=compact?321:725,top=32,bottom=242;
   const maxValue=Math.max(0,...values.map(v=>v.value));
   const yCeiling=Math.max(4,Math.ceil(maxValue/4)*4);
   const xx=i=>Math.round((left+(right-left)*i/(values.length-1))*10)/10;
@@ -339,8 +341,9 @@ function activityChart(goals){
     ${activityCoach(goals)}
     <div class="activity-controls"><div class="activity-control" role="group" aria-label="Период графика"><span>Период</span>${periodButtons}</div>
     <div class="activity-control" role="group" aria-label="Режим графика"><span>Показать</span>${modeButtons}</div></div>
+    ${activityPeriod>7?'<p class="activity-scroll-tip">← Листайте график влево, чтобы посмотреть предыдущие даты</p>':''}
     <div class="activity-scroll" tabindex="0" role="region" aria-label="График активности с прокруткой по горизонтали">
-    <svg class="activity-svg" data-activity-period="${activityPeriod}" viewBox="0 0 760 300" role="group" aria-label="Активность за ${activityPeriod} дней: ${activityMode==='daily'?'выполнений в день':'накопленных выполнений'}">
+    <svg class="activity-svg" data-activity-period="${activityPeriod}" viewBox="0 0 ${svgWidth} 300" role="group" aria-label="Активность за ${activityPeriod} дней: ${activityMode==='daily'?'выполнений в день':'накопленных выполнений'}">
       <defs><linearGradient id="activity-gradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7cc65b" stop-opacity=".30"/><stop offset="1" stop-color="#7cc65b" stop-opacity=".015"/></linearGradient></defs>
       ${numbers}
       <path d="${area}" fill="url(#activity-gradient)"/>
@@ -371,7 +374,19 @@ function selectActivityPoint(point){
 
 function progressPage(){const goals=myGoals(),days=allDays(goals),completed=goals.filter(g=>progress(g)===100).length,current=streak(days,today()),best=bestStreak(days);return `${head('Ваш прогресс','Каждый шаг остаётся в истории — даже если был пропуск.')}<div class="stat-grid"><div class="stat"><strong>${days.length}</strong><span>дней с действиями</span></div><div class="stat"><strong>${current}</strong><span>дней текущей серии</span></div><div class="stat"><strong>${completed}</strong><span>целей достигнуто</span></div></div>${activityChart(goals)}<div class="card" style="margin-top:18px"><h3>Последние 14 дней</h3>${calendar(days,today(),14)}<p class="habit-legend">Выделены дни с хотя бы одной выполненной привычкой. Лучшая серия — ${best} дней.</p><h3 style="margin:26px 0 10px">Ваши достижения</h3><div class="achievements">${[3,7,30].map(n=>`<div class="achievement ${milestones(days.length).includes(n)?'':'locked'}">${milestones(days.length).includes(n)?'★':'◇'} ${n} дней действий</div>`).join('')}</div></div>${goals.length?`${head('По каждой привычке')}${goals.map(g=>`<div class="card goal-progress"><h3>${h(g.title)}</h3>${smallProgress(g)}<p class="mini-meta">Отмечено дней: ${g.log.length} · текущая серия: ${streak(g.log,today())}</p>${calendar(g.log,today(),7)}</div>`).join('')}`:''}`;}
 function aboutPage(){return `<div class="hero"><div><p class="eyebrow">ПРОСТАЯ СИСТЕМА</p><h1>Не жди вдохновения. Начни с малого.</h1><p class="lead">Привычка помогает связать большую цель с действием, которое можно повторить завтра.</p><button class="button button-dark" data-action="new">Начать с одной цели</button></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-circle">↗</div></div></div><div class="about-grid"><div class="card"><div class="about-number">1</div><h3>Определите цель</h3><p>Куда хотите прийти и зачем. Разбейте путь на небольшие понятные шаги.</p></div><div class="card"><div class="about-number">2</div><h3>Привяжите действие</h3><p>«После утреннего кофе я занимаюсь пять минут». Чем конкретнее, тем проще начать.</p></div><div class="card"><div class="about-number">3</div><h3>Отмечайте каждый день</h3><p>Получайте следующий шаг и наблюдайте за прогрессом. Пропуск дня не стирает успехов.</p></div></div><div class="card" style="margin-top:20px"><h3>О ваших данных</h3><p class="muted subhead">Регистрация не нужна. Всё хранится в браузере на этом устройстве. Если очистить данные браузера, записи могут исчезнуть — периодически сохраняйте резервную копию через кнопку «Экспорт». Импорт позволяет восстановить их из файла.</p></div>`;}
-function render(){renderCompanionHeader();document.querySelectorAll('[data-tab]').forEach(b=>{const on=b.dataset.tab===currentTab;b.classList.toggle('active',on);on?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});content.innerHTML=({today:todayPage,goals:goalsPage,progress:progressPage,about:aboutPage}[currentTab])();}
+function positionActivityChart(){
+  if(currentTab!=='progress')return;
+  const scroll=content.querySelector('.activity-scroll');
+  if(!scroll)return;
+  // Put the newest observations in view by default, even on narrow screens.
+  scroll.scrollLeft=Math.max(0,scroll.scrollWidth-scroll.clientWidth);
+  const series=activitySeries(myGoals(),today(),activityPeriod);
+  if(activitySummary(series).total===0)return;
+  const points=scroll.querySelectorAll('[data-activity-day]');
+  const latest=points[points.length-1];
+  if(latest)selectActivityPoint(latest);
+}
+function render(){renderCompanionHeader();document.querySelectorAll('[data-tab]').forEach(b=>{const on=b.dataset.tab===currentTab;b.classList.toggle('active',on);on?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});content.innerHTML=({today:todayPage,goals:goalsPage,progress:progressPage,about:aboutPage}[currentTab])();positionActivityChart();}
 function addStepRow(step={}){
   if(inputSteps.children.length>=30){toast('Не более 30 шагов для одной цели');return;}
   const row=document.createElement('div'); row.className='step-entry';
@@ -470,5 +485,11 @@ form.addEventListener('submit',submitGoal);
 fileInput.addEventListener('change',()=>importData(fileInput.files?.[0]));
 function refreshIfNeeded(){const now=today();if(lastDay!==now){lastDay=now;render();}}
 window.addEventListener('focus',refreshIfNeeded);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshIfNeeded();});setInterval(refreshIfNeeded,60_000);
+// Rebuild SVG geometry only if viewport crosses the mobile/desktop breakpoint.
+let wasNarrow=window.matchMedia?.('(max-width:740px)')?.matches===true;
+window.addEventListener('resize',()=>{
+  const isNarrow=window.matchMedia?.('(max-width:740px)')?.matches===true;
+  if(isNarrow!==wasNarrow){wasNarrow=isNarrow;if(currentTab==='progress')render();}
+});
 render();
 if(state.companionId===null)requestAnimationFrame(openCompanions);

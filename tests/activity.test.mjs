@@ -58,3 +58,27 @@ test('новый график доступен в интерфейсе и не �
   assert.match(code,/data-activity-day/);
   assert.match(code,/aria-label/);
 });
+
+test('мобильная неделя помещается целиком, без скрытой последней точки',()=>{
+  const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+  assert.match(app,/const svgWidth=compact\?340:760/);
+  assert.match(app,/viewBox="0 0 \$\{svgWidth\} 300"/);
+  assert.match(css,/\.activity-svg\[data-activity-period="7"\]\{min-width:0;width:100%;max-width:100%\}/);
+  assert.match(app,/activityPeriod=window\.matchMedia/);
+});
+test('длинные графики сразу показывают последние дни и выбранную точку',()=>{
+  const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
+  assert.match(app,/function positionActivityChart\(/);
+  assert.match(app,/scroll\.scrollLeft=Math\.max\(0,scroll\.scrollWidth-scroll\.clientWidth\)/);
+  assert.match(app,/if\(latest\)selectActivityPoint\(latest\)/);
+  assert.match(app,/positionActivityChart\(\)/);
+  assert.match(app,/Листайте график влево/);
+});
+test('фактическая последняя точка накопительного графика соответствует числу выполнений',()=>{
+  const series=activitySeries([goal(['2026-11-21']),goal(['2026-11-21']),goal(['2026-11-21'])],'2026-11-21',7);
+  const cumulative=activityValues(series,'cumulative');
+  assert.deepEqual(cumulative.map(p=>p.value),[0,0,0,0,0,0,3]);
+  assert.equal(cumulative.at(-1).day,'2026-11-21');
+  assert.deepEqual(activitySummary(series),{total:3,activeDays:1,peak:3});
+});

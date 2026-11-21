@@ -338,3 +338,13 @@
   .feedback-bounce,.feedback-sparkles::after{animation:none!important;display:none}
   .effects-setting input[type="checkbox"],.effects-setting input[type="checkbox"]::before{transition:none}
 }
+
+/* Mobile activity chart: all seven points fit; longer periods start at today. */
+.activity-scroll-tip{display:none;color:#4e7250;font-size:12px;font-weight:750;margin:6px 0 2px}
+.activity-dot.is-selected .activity-visible-dot{fill:#225f38;stroke:#c7f19b;stroke-width:5}
+@media(max-width:740px){
+  .activity-svg[data-activity-period="7"]{min-width:0;width:100%;max-width:100%}
+  .activity-svg[data-activity-period="7"] .activity-tick{font-size:14px}
+  .activity-svg[data-activity-period="7"] .activity-axis-name{font-size:14px}
+  .activity-scroll-tip{display:block}
+}
